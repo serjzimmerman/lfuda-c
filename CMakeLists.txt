@@ -14,9 +14,9 @@ set(LFUDA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 find_package(GTest)
 if (GTEST_FOUND)
-enable_testing()
+    enable_testing()
 else()
-message(WARNING "Unable to find Google Test, testing disabled")
+    message(WARNING "Unable to find Google Test, testing disabled")
 endif()
 
 add_subdirectory(lfuda)

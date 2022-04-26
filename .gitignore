@@ -2,3 +2,10 @@ build/
 bin/*
 !bin/.keep
 .vscode/
+Makefile
+CMakeFiles
+*.cmake
+CMakeCache.txt
+tl
+lfuc
+*.a
