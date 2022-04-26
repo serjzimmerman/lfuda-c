@@ -9,9 +9,11 @@
 #include <stdlib.h>
 #endif
 
+// Calloc memory and exit when there is none available
 static void *calloc_checked(size_t count, size_t size) {
   void *ptr = calloc(count, size);
   if (!ptr) {
+// Verbose error messages
 #ifdef NDEBUG
     ERROR("Memory exhausted\n");
 #else

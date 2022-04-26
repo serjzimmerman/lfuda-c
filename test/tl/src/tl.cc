@@ -3,6 +3,9 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 
+// SetUp and TearDown calling constructor and destructor of dl_list
+// All data is assumed to be allocated on heap with calloc or malloc and freed with free()
+// Use ints for tests
 class TestList : public ::testing::Test {
 protected:
   void SetUp() {
@@ -17,6 +20,8 @@ protected:
   dl_list_t list;
 };
 
+// Template function to compare list to a std::array of integers
+// If list differs from the array, then exit the test is failed
 template <std::size_t N> void ASSERT_LIST_EQ(dl_list_t list, std::array<int, N> array) {
   dl_node_t node = dl_list_get_first(list);
   std::size_t i = 0;
@@ -31,6 +36,7 @@ template <std::size_t N> void ASSERT_LIST_EQ(dl_list_t list, std::array<int, N> 
   ASSERT_EQ(i, array.size());
 }
 
+// Initialize dl_node_t with ptr to an allocated int with value
 dl_node_t NodeInitWithValue(int value) {
   dl_node_t node = dl_node_init(NULL);
   int *ptr = (int *)calloc(1, sizeof(int));
@@ -84,6 +90,7 @@ TEST_F(TestList, TestPop) {
   ASSERT_TRUE(dl_list_is_empty(list));
 }
 
+// Run all tests
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

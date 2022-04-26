@@ -9,6 +9,8 @@
 struct dl_node_s {
   struct dl_node_s *next, *prev;
   void *data;
+  // Flexible array member for storing data
+  char fam[];
 };
 
 dl_node_t dl_node_init(void *data) {
@@ -71,11 +73,12 @@ void dl_list_push_front(dl_list_t list_, dl_node_t node_) {
   assert(list);
   assert(node);
 
-  // List is empty
+  // List is empty, set head and tail to node
   if (list->head == NULL) {
     list->head = list->tail = node;
     node->next = node->prev = NULL;
   } else {
+    // Insert node to the head
     node->next = list->head;
     list->head->prev = node;
     node->prev = NULL;
@@ -92,7 +95,7 @@ void dl_list_push_back(dl_list_t list_, dl_node_t node_) {
   assert(list);
   assert(node);
 
-  // List is empty
+  // List is empty, set head and tail to node
   if (list->head == NULL) {
     list->head = list->tail = node;
     node->next = node->prev = NULL;

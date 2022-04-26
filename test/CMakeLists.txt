@@ -1,6 +1,6 @@
 add_subdirectory(lfuc)
 
+# If there is Google Test available, then add test targets
 if (GTEST_FOUND)
-enable_testing()
 add_subdirectory(tl)
 endif()

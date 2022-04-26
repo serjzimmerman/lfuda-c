@@ -1,4 +1,4 @@
-# Test application to List (tl)
+# Test application for Doubly Linked List (tl)
 
 set(TL_SOURCES
   src/tl.cc
