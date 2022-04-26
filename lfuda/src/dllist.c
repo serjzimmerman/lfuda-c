@@ -138,6 +138,7 @@ void dl_list_insert_after(dl_list_t list_, dl_node_t node_, dl_node_t toinsert_)
 
     toinsert->prev = node;
     toinsert->next = node->next;
+    node->next->prev = toinsert;
     node->next = toinsert;
 
     list->len++;

@@ -111,6 +111,30 @@ TEST_F(TestList, TestPop) {
     ASSERT_TRUE(dl_list_is_empty(list));
 }
 
+TEST_F(TestList, TestInsert) {
+    dl_node_t node1 = NodeInitWithValue(1);
+
+    dl_list_push_back(list, node1);
+    dl_list_push_back(list, NodeInitWithValue(3));
+    dl_list_insert_after(list, node1, NodeInitWithValue(2));
+
+    ASSERT_LIST_EQ(list, std::array<int, 3>{
+                             {1, 2, 3}
+    });
+
+    dl_list_insert_after(list, dl_list_get_first(list), NodeInitWithValue(4));
+
+    ASSERT_LIST_EQ(list, std::array<int, 4>{
+                             {1, 4, 2, 3}
+    });
+
+    dl_list_push_back(list, dl_list_pop_front(list));
+
+    ASSERT_LIST_EQ(list, std::array<int, 4>{
+                             {4, 2, 3, 1}
+    });
+}
+
 // Run all tests
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
