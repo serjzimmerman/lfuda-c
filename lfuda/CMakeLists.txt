@@ -1,5 +1,5 @@
 set(LFUDA_SOURCES
-  src/dllist.c
+    src/dllist.c
 )
 
 add_library(lfuda ${LFUDA_SOURCES})
