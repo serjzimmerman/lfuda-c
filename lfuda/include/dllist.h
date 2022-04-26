@@ -1,6 +1,10 @@
 #ifndef LFUDA_DLLIST_H
 #define LFUDA_DLLIST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Handles to doubly linked list and node
 typedef void *dl_list_t;
 typedef void *dl_node_t;
@@ -16,11 +20,17 @@ void dl_list_insert_after(dl_list_t list_, dl_node_t node_, dl_node_t toinsert_)
 dl_node_t dl_list_remove(dl_list_t list_, dl_node_t node_);
 dl_node_t dl_list_pop_front(dl_list_t list_);
 dl_node_t dl_list_pop_back(dl_list_t list_);
+dl_node_t dl_list_get_first(dl_list_t list_);
 
 dl_node_t dl_node_init(void *data);
-void dl_node_free(dl_node_t node_);
+void dl_node_free(dl_node_t node_, void (*data_free)(void *));
+dl_node_t dl_node_get_next(dl_node_t node_);
 
 void *dl_node_get_data(dl_node_t node_);
 void dl_node_set_data(dl_node_t node_, void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

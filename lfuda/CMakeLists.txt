@@ -4,4 +4,4 @@ set(LFUDA_SOURCES
 
 add_library(lfuda ${LFUDA_SOURCES})
 # Temporarily include src directory for testing
-target_include_directories(lfuda PRIVATE ${LFUDA_COMMON_DIR} PUBLIC src)
+target_include_directories(lfuda PRIVATE ${LFUDA_COMMON_DIR} PUBLIC include)

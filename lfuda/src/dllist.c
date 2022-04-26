@@ -17,7 +17,10 @@ dl_node_t dl_node_init(void *data) {
   return node;
 }
 
-void dl_node_free(dl_node_t node_) {
+void dl_node_free(dl_node_t node_, void (*data_free)(void *)) {
+  if (data_free) {
+    data_free(((struct dl_node_s *)node_)->data);
+  }
   free(node_);
 }
 
@@ -31,6 +34,12 @@ void dl_node_set_data(dl_node_t node_, void *data) {
   struct dl_node_s *node = (struct dl_node_s *)node_;
   assert(node);
   node->data = data;
+}
+
+dl_node_t dl_node_get_next(dl_node_t node_) {
+  struct dl_node_s *node = (struct dl_node_s *)node_;
+  assert(node);
+  return node->next;
 }
 
 struct dl_list_s {
@@ -47,6 +56,12 @@ int dl_list_is_empty(dl_list_t list_) {
   struct dl_list_s *list = (struct dl_list_s *)list_;
   assert(list);
   return !(list->len);
+}
+
+dl_node_t dl_list_get_first(dl_list_t list_) {
+  struct dl_list_s *list = (struct dl_list_s *)list_;
+  assert(list);
+  return list->head;
 }
 
 void dl_list_push_front(dl_list_t list_, dl_node_t node_) {
