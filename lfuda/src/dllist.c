@@ -44,6 +44,12 @@ dl_node_t dl_node_get_next(dl_node_t node_) {
     return node->next;
 }
 
+dl_node_t dl_node_get_prev(dl_node_t node_) {
+    struct dl_node_s *node = (struct dl_node_s *)node_;
+    assert(node);
+    return node->prev;
+}
+
 struct dl_list_s {
     struct dl_node_s *head, *tail;
     size_t len;
@@ -64,6 +70,12 @@ dl_node_t dl_list_get_first(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
     assert(list);
     return list->head;
+}
+
+dl_node_t dl_list_get_last(dl_list_t list_) {
+    struct dl_list_s *list = (struct dl_list_s *)list_;
+    assert(list);
+    return list->tail;
 }
 
 void dl_list_push_front(dl_list_t list_, dl_node_t node_) {
@@ -147,6 +159,7 @@ dl_node_t dl_list_pop_front(dl_list_t list_) {
     } else {
         list->head = list->head->next;
         node->next = NULL;
+        list->head->prev = NULL;
     }
 
     list->len--;
