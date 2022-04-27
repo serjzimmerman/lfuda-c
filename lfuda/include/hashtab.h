@@ -19,7 +19,13 @@ typedef unsigned long (*hash_func_t)(void *);
 typedef int (*entry_cmp_func_t)(void *, void *);
 typedef void (*entry_free_func_t)(void *);
 
+// initialize hash table
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc);
+
+// change load factor from 0.7f in default
+void hashtab_set_load_factor(hashtab_t table_, float load_factor);
+
+// free hash table
 void hashtab_free(hashtab_t table_);
 
 // Intermediate struct to be returned from get_stat function

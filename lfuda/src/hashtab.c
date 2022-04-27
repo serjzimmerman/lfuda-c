@@ -3,6 +3,11 @@
 //                                          hash table realization                                          //
 //                                                                                                          //
 //----------------------------------------------------------------------------------------------------------//
+//                                        Authors:                                                          //
+//                                            Tsimerman Sergey                                              //
+//                                            Romanov Alexander                                             //
+//                                            Gerasemenko Danil                                             //
+//----------------------------------------------------------------------------------------------------------//
 
 #include <assert.h>
 #include <stdio.h>
@@ -17,7 +22,7 @@
 typedef struct {
     dl_node_t node;
 #ifdef HASHTAB_USE_N_OPTIMIZATION
-    size_t n;
+    size_t n; // number of nodes in bucket
 #endif
 } buckets_t;
 
@@ -33,7 +38,7 @@ struct hashtab_s {
     dl_list_t list;
     float load_factor;
 
-    buckets_t array[];
+    buckets_t array[]; // fam
 };
 
 //============================================================================================
@@ -48,12 +53,16 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     table->hash = hash;
     table->cmp = cmp;
     table->free = freefunc;
-
+    table->load_factor = 0.7f;
     table->list = dl_list_init();
 
     return table;
 }
-
+//============================================================================================
+void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
+    struct hashtab_s *table = table_;
+    table->load_factor = load_factor;
+}
 //============================================================================================
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -74,7 +83,6 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 }
 
 //============================================================================================
-#define CRITICAL_FACTOR 0.7f
 
 void hashtab_insert(hashtab_t *table_, void *entry) {
     dl_node_t node = NULL;
@@ -86,26 +94,27 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
 
     table = *table_;
 
-    if ((float)table->inserts / table->size > CRITICAL_FACTOR) {
+    if ((float)table->inserts / table->size > table->load_factor) { // resize if many insertions done
         table = hashtab_resize(table, 2 * table->size);
         *table_ = table;
     }
 
     hash = table->hash(entry) % table->size;
-    node = dl_node_init(entry);
+    node = dl_node_init(entry); // create new node
 
     table->inserts += 1;
 
-    if (table->array[hash].node == NULL) {
-        dl_list_push_back(table->list, node);
+    if (table->array[hash].node == NULL) {    // if there were no nodes in bucket
+        dl_list_push_back(table->list, node); // insert in the end of the list
         table->array[hash].node = node;
         table->buckets_used += 1;
-    } else {
-        dl_list_insert_after(table->list, table->array[hash].node, node);
+    } else { // if there are a number of nodes in bucket
+
+        dl_list_insert_after(table->list, table->array[hash].node, node); // insert after top of the sublist
         table->collisions += 1;
     }
 #ifdef HASHTAB_USE_N_OPTIMIZATION
-    table->array[hash].n += 1;
+    table->array[hash].n += 1; // increment number of nodes in bucket
 #endif
 }
 
@@ -123,14 +132,14 @@ void *hashtab_lookup(hashtab_t table_, void *key) {
     if (!find)
         return NULL;
 
-#ifdef HASHTAB_USE_N_OPTIMIZATION
+#ifdef HASHTAB_USE_N_OPTIMIZATION // using number of nodes in bucket
     size_t capacity = table->array[hash].n;
     for (size_t i = 0; i < capacity; i++) {
         if (table->cmp(dl_node_get_data(find), key) == 0)
             return find;
         find = dl_node_get_next(find);
     }
-#else
+#else // using hash
     unsigned long temphash = hash;
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0)
@@ -138,23 +147,19 @@ void *hashtab_lookup(hashtab_t table_, void *key) {
         find = dl_node_get_next(find);
         if (!find)
             return NULL;
-        temphash = table->hash(dl_node_get_data(find)) % table->size;
+        temphash = table->hash(dl_node_get_data(find)) % table->size; // update hash
     }
 #endif
     return NULL;
 }
 
-#if 0
+#if 1
 //============================================================================================
 void *hashtab_remove(hashtab_t table_, void *key) {
     struct hashtab_s *table = NULL;
     dl_list_t find = NULL;
-    int hash = 0;
-#ifdef HASHTAB_USE_N_OPTIMIZATION
-    int capacity = 0;
-#else
-    int temphash = 0;
-#endif
+    unsigned long hash = 0;
+
     assert(table_);
     assert(key);
 
@@ -163,22 +168,42 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     if (!find)
         return NULL;
 
-#ifdef HASHTAB_USE_N_OPTIMIZATION
-    capacity = table->array[hash].n;
+#ifdef HASHTAB_USE_N_OPTIMIZATION // using number of nodes in bucket
+    int capacity = table->array[hash].n;
     for (int i = 0; i < capacity; i++) {
-        if (table->cmp(dl_node_get_data(find), key) == 0)
-            return dl_list_remove(table->list, find);
+        if (table->cmp(dl_node_get_data(find), key) == 0) {
+            if (capacity > 1) // decrement number of collisions if there were many nodes in bucket
+                table->collisions -= 1;
+            else // if only one - clear the bucket
+                table->array[hash].node = NULL;
+            table->inserts -= 1;
+            table->array[hash].n -= 1;
+
+            return dl_list_remove(table->list, find); // remove node from the list and return it
+        }
         find = dl_node_get_next(find);
     }
-#else
-    temphash = hash;
+#else // using hash
+    unsigned long temphash = hash;
+    dl_node_t next = NULL;
+    dl_node_t prev = NULL;
     while (temphash == hash) {
-        if (table->cmp(dl_node_get_data(find), key) == 0)
+        if (table->cmp(dl_node_get_data(find), key) == 0) {
+            next = dl_node_get_next(find);
+            prev = dl_node_get_prev(find);
+
+            if (next && table->hash(next) % table->size != hash)     //
+                if (prev && table->hash(prev) % table->size != hash) // clean bucket if there were only one node in it
+                    table->array[hash].node = NULL;                  //
+
+            table->inserts -= 1;
+
             return dl_list_remove(table->list, find);
-        find = dl_node_get_next(find);
+        }
+        find = dl_node_get_next(find); // remove node from the list and return it
         if (!find)
             return NULL;
-        temphash = table->hash(dl_node_get_data(find)) % table->size;
+        temphash = table->hash(dl_node_get_data(find)) % table->size; // update hash
     }
 #endif
     return NULL;
