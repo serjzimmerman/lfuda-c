@@ -21,50 +21,48 @@ typedef struct {
 #endif
 } buckets_t;
 
-typedef struct {
+struct hashtab_s {
     size_t size;
     size_t inserts;
     size_t buckets_used;
     size_t collisions;
+
     hash_func_t hash;
     entry_cmp_func_t cmp;
     entry_free_func_t free;
     dl_list_t list;
+    float load_factor;
+
     buckets_t array[];
-} hashtab_s;
+};
 
 //============================================================================================
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc) {
-    hashtab_s *table;
-
     assert(initial_size);
     assert(hash);
     assert(cmp);
-    assert(freefunc);
 
-    table = calloc_checked(1, sizeof(hashtab_s) + initial_size * sizeof(buckets_t));
+    struct hashtab_s *table = calloc_checked(1, sizeof(struct hashtab_s) + initial_size * sizeof(buckets_t));
+
     table->size = initial_size;
     table->hash = hash;
     table->cmp = cmp;
-    table->free = free;
-    table->list = dl_list_init();
+    table->free = freefunc;
 
-    if (!table->list) {
-        free(table);
-        return NULL;
-    }
+    table->list = dl_list_init();
 
     return table;
 }
+
 //============================================================================================
 void hashtab_free(hashtab_t table_) {
-    hashtab_s *table = table_;
+    struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
     free(table);
 }
 
 hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
-    hashtab_s *table = table_;
+    struct hashtab_s *table = (struct hashtab_s *)table_;
     hashtab_stat_t stat;
 
     stat.size = table->size;
@@ -80,8 +78,8 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 
 void hashtab_insert(hashtab_t *table_, void *entry) {
     dl_node_t node = NULL;
-    hashtab_s *table = NULL;
-    int hash = 0;
+    struct hashtab_s *table = NULL;
+    unsigned long hash = 0;
 
     assert(table_);
     assert(entry);
@@ -110,35 +108,30 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     table->array[hash].n += 1;
 #endif
 }
+
 //============================================================================================
 void *hashtab_lookup(hashtab_t table_, void *key) {
-    hashtab_s *table = NULL;
+    struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_node_t find = NULL;
-    int hash = 0;
-#ifdef HASHTAB_USE_N_OPTIMIZATION
-    int capacity = 0;
-#else
-    int temphash = 0;
-#endif
+    unsigned long hash = 0;
 
     assert(table);
     assert(key);
 
     hash = table->hash(key) % table->size;
-
     find = table->array[hash].node;
     if (!find)
         return NULL;
 
 #ifdef HASHTAB_USE_N_OPTIMIZATION
-    capacity = table->array[hash].n;
-    for (int i = 0; i < capacity; i++) {
+    size_t capacity = table->array[hash].n;
+    for (size_t i = 0; i < capacity; i++) {
         if (table->cmp(dl_node_get_data(find), key) == 0)
             return find;
         find = dl_node_get_next(find);
     }
 #else
-    temphash = hash;
+    unsigned long temphash = hash;
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0)
             return find;
@@ -150,9 +143,11 @@ void *hashtab_lookup(hashtab_t table_, void *key) {
 #endif
     return NULL;
 }
+
+#if 0
 //============================================================================================
 void *hashtab_remove(hashtab_t table_, void *key) {
-    hashtab_s *table = NULL;
+    struct hashtab_s *table = NULL;
     dl_list_t find = NULL;
     int hash = 0;
 #ifdef HASHTAB_USE_N_OPTIMIZATION
@@ -188,3 +183,4 @@ void *hashtab_remove(hashtab_t table_, void *key) {
 #endif
     return NULL;
 }
+#endif
