@@ -3,21 +3,30 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 
+struct ListDeleter {
+    void operator()(dl_list_t list) {
+        dl_list_free(list, free);
+    }
+};
+
+class List {
+  public:
+    std::unique_ptr<std::remove_pointer_t<dl_list_t>, ListDeleter> list;
+
+    List() : list(dl_list_init(), ListDeleter{}) {
+    }
+
+    operator dl_list_t() {
+        return list.get();
+    }
+};
+
 // SetUp and TearDown calling constructor and destructor of dl_list
 // All data is assumed to be allocated on heap with calloc or malloc and freed with free()
 // Use ints for tests
 class TestList : public ::testing::Test {
-  protected:
-    void SetUp() {
-        list = dl_list_init();
-    }
-
-    void TearDown() {
-        dl_list_free(list, free);
-        list = NULL;
-    }
-
-    dl_list_t list;
+  public:
+    List list;
 };
 
 // Compare list with a std::array of ints moving in the forward direction
