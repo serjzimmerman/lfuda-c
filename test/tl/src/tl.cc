@@ -10,9 +10,9 @@ struct ListDeleter {
 };
 
 class List {
-  public:
     std::unique_ptr<std::remove_pointer_t<dl_list_t>, ListDeleter> list;
 
+  public:
     List() : list(dl_list_init(), ListDeleter{}) {
     }
 
@@ -35,7 +35,7 @@ template <std::size_t N> void ASSERT_LIST_EQ_FORW(dl_list_t list, std::array<int
     std::size_t i = 0;
 
     while (node && i < array.size()) {
-        ASSERT_EQ(*(int *)dl_node_get_data(node), array[i++]);
+        ASSERT_EQ(*static_cast<int *>(dl_node_get_data(node)), array.at(i++));
         node = dl_node_get_next(node);
     }
 
@@ -49,7 +49,7 @@ template <std::size_t N> void ASSERT_LIST_EQ_BACK(dl_list_t list, std::array<int
     std::size_t i = array.size() - 1;
 
     while (node) {
-        ASSERT_EQ(*(int *)dl_node_get_data(node), array[i]);
+        ASSERT_EQ(*static_cast<int *>(dl_node_get_data(node)), array.at(i));
         node = dl_node_get_prev(node);
         if (i == 0) {
             break;
@@ -69,9 +69,9 @@ template <std::size_t N> void ASSERT_LIST_EQ(dl_list_t list, std::array<int, N> 
 // Initialize dl_node_t with ptr to an allocated int with value
 dl_node_t NodeInitWithValue(int value) {
     dl_node_t node = dl_node_init(NULL);
-    int *ptr = (int *)calloc(1, sizeof(int));
+    int *ptr = static_cast<int *>(calloc(1, sizeof(int)));
     *ptr = value;
-    dl_node_set_data(node, (void *)ptr);
+    dl_node_set_data(node, static_cast<void *>(ptr));
     return node;
 }
 

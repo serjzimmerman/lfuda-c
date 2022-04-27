@@ -19,5 +19,18 @@ else()
     message(WARNING "Unable to find Google Test, testing disabled")
 endif()
 
+# Clang-tidy for linting
+set(CMAKE_CXX_CLANG_TIDY 
+    clang-tidy;
+    -checks=google-*,cppcoreguidelines-*
+)
+
+set(CMAKE_C_CLANG_TIDY 
+    clang-tidy;
+    -checks=google-*,cppcoreguidelines-*
+)
+
+set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_subdirectory(lfuda)
 add_subdirectory(test)

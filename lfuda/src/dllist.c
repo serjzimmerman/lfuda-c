@@ -146,11 +146,10 @@ void dl_list_insert_after(dl_list_t list_, dl_node_t node_, dl_node_t toinsert_)
 
 dl_node_t dl_list_pop_front(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
-    struct dl_node_s *node;
 
     assert(list);
 
-    node = list->head;
+    struct dl_node_s *node = list->head;
     if (!node) {
         ERROR("Trying to pop an element from an empty list\n");
     }
@@ -169,11 +168,10 @@ dl_node_t dl_list_pop_front(dl_list_t list_) {
 
 dl_node_t dl_list_pop_back(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
-    struct dl_node_s *node;
 
     assert(list);
 
-    node = list->tail;
+    struct dl_node_s *node = list->tail;
     if (!node) {
         ERROR("Trying to pop an element from an empty list\n");
     }
