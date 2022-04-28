@@ -49,6 +49,9 @@ struct hashtab_s {
     buckets_t array[];
 };
 
+//============================================================================================
+
+
 #define DEFAULT_LOAD_FACTOR 0.7f
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc) {
     assert(initial_size);
@@ -67,6 +70,9 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     return table;
 }
 
+//============================================================================================
+
+
 void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     struct hashtab_s *table = table_;
     // Assert that the new load factor is in a reasonable range
@@ -74,11 +80,17 @@ void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     table->load_factor = load_factor;
 }
 
+//============================================================================================
+
+
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
     free(table);
 }
+
+//============================================================================================
+
 
 hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -92,6 +104,9 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
     return stat;
 }
 
+//============================================================================================
+
+
 void hashtab_insert(hashtab_t *table_, void *entry) {
     struct hashtab_s *table = *(struct hashtab_s **)table_;
 
@@ -100,7 +115,7 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
 
 // Commented out for the moment, awaiting implementation of the resize function
 #if 0
-    if ((float)table->inserts / table->size > table->load_factor) { // Resize if many insertions done
+    if ((float)table->inserts > table->load_factor * table->size) { // Resize if many insertions done
         table = hashtab_resize(table, 2 * table->size);
         *table_ = table;
     }
@@ -161,6 +176,8 @@ void *hashtab_lookup(hashtab_t table_, void *key) {
     return NULL;
 }
 
+//============================================================================================
+
 void *hashtab_remove(hashtab_t table_, void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 
@@ -192,7 +209,7 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     }
 #else // using hash
     unsigned long temphash = hash;
-    dl_node_t next = dl_node_get_next(find), prev = dl_node_get_prev(find);
+    dl_node_t next = dl_node_get_next(find);
 
     // If next is NULL, then we remove the entry from the bucket. The same applies if the next bucket has a different
     // hash
@@ -207,30 +224,27 @@ void *hashtab_remove(hashtab_t table_, void *key) {
 
         // In any case the counter gets decremented
         table->inserts--;
-        goto hashtab_remove_exit;
+        return dl_node_get_data(dl_list_remove(table->list, find));
     }
 
-    if (!(find = dl_node_get_next(find))) {
+    find = dl_node_get_next(find);
+    if (!find) {
         return NULL;
     }
-
-    next = dl_node_get_next(find);
-    prev = dl_node_get_prev(find);
 
     // From now on we can assume that there are some previous nodes with the same hash
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
-            goto hashtab_remove_exit;
+            return dl_node_get_data(dl_list_remove(table->list, find));
         }
 
-        if (!(find = dl_node_get_next(find))) { // remove node from the list and return it
+        find = dl_node_get_next(find);
+        if (!find) { // remove node from the list and return it
             return NULL;
         }
 
         temphash = table->hash(dl_node_get_data(find)) % table->size; // update hash
     }
-hashtab_remove_exit:
-    return dl_node_get_data(dl_list_remove(table->list, find));
 #endif
     return NULL;
 }
