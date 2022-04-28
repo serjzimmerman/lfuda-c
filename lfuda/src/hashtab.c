@@ -111,7 +111,7 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     assert(entry);
 
     // Commented out for the moment, awaiting implementation of the resize function
-    if ((float)table->inserts > table->load_factor * table->size) { // Resize if many insertions done
+    if ((float)table->inserts > table->load_factor * (float)table->size) { // Resize if many insertions done
         table = hashtab_resize(table, ENCR_MULTIPLIER * table->size - 1);
         *table_ = table;
     }
