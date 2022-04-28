@@ -1,28 +1,41 @@
-base_folder="./resources"
+base_folder="resources"
 
 red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-echo "Testing ${green}${executable}${reset}"
+current_folder=${2:-./}
+passed=true
 
-for file in $base_folder/test*.dat
+for file in ${current_folder}/${base_folder}/test*.dat
 do
-  count=`echo $file | egrep -o [0-9]+`
-  
-  echo -n "Testing ${green}${file}${reset} ... "
-  
-  ./bin/hshtend -i $file > $base_folder/temp.dat
-  if diff -Z ${base_folder}/ans${count}.dat ${base_folder}/temp.dat; then
-    echo "${green}Passed${reset}"
-  else
-    echo "${red}Failed${reset}"
+    # Total number of test cases found
+    count=`echo $file | egrep -o [0-9]+`
+    
+    echo -n "Testing ${green}${file}${reset} ... "
 
-    result=`cat ${base_folder}/temp.dat`
-    expected=`cat ${base_folder}/ans${count}.dat`
+    # Check if an argument to executable location has been passed to the program
+    if [ -z "$1" ]
+    then
+        bin/hshtend -i $file > ${current_folder}/$base_folder/temp.dat
+    else
+        $1 -i $file > ${current_folder}/$base_folder/temp.dat
+    fi
 
-    echo -e "Result: \t$result"
-    echo "--------------------------------"
-    echo -e "Expected: \t$expected"
-  fi
+    # Compare inputs
+    if diff -Z ${current_folder}/${base_folder}/ans${count}.dat ${current_folder}/${base_folder}/temp.dat;
+    then
+        echo "${green}Passed${reset}"
+    else
+        echo "${red}Failed${reset}"
+        passed=false
+    fi
 done
+
+if ${passed}
+then
+    exit 0
+else
+    # Exit with the best number for an exit code
+    exit 42
+fi

@@ -42,5 +42,7 @@ endif()
 
 set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_program(BASH_PROGRAM bash)
+
 add_subdirectory(lfuda)
 add_subdirectory(test)
