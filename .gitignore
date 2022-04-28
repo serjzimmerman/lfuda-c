@@ -1,15 +1,11 @@
+# Please you proper build directory or just use vscode
 build/
+# Install directory
 bin/*
 !bin/.keep
+# Vscode junk
 .vscode/
-Makefile
+
+# For masachism lovers (e.g. Alexander)
 CMakeFiles
-*.cmake
 CMakeCache.txt
-tl
-lfuc
-*.a
-LastTest.log
-CTestCostData.txt
-hsht
-hshtend

@@ -51,7 +51,6 @@ struct hashtab_s {
 
 //============================================================================================
 
-
 #define DEFAULT_LOAD_FACTOR 0.7f
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc) {
     assert(initial_size);
@@ -72,7 +71,6 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
 
 //============================================================================================
 
-
 void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     struct hashtab_s *table = table_;
     // Assert that the new load factor is in a reasonable range
@@ -82,7 +80,6 @@ void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
 
 //============================================================================================
 
-
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
@@ -90,7 +87,6 @@ void hashtab_free(hashtab_t table_) {
 }
 
 //============================================================================================
-
 
 hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -106,6 +102,7 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 
 //============================================================================================
 
+#define ENCR_MULTIPLIER 2
 
 void hashtab_insert(hashtab_t *table_, void *entry) {
     struct hashtab_s *table = *(struct hashtab_s **)table_;
@@ -113,13 +110,11 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     assert(table_);
     assert(entry);
 
-// Commented out for the moment, awaiting implementation of the resize function
-#if 0
+    // Commented out for the moment, awaiting implementation of the resize function
     if ((float)table->inserts > table->load_factor * table->size) { // Resize if many insertions done
-        table = hashtab_resize(table, 2 * table->size);
+        table = hashtab_resize(table, ENCR_MULTIPLIER * table->size - 1);
         *table_ = table;
     }
-#endif
 
     unsigned long hash = table->hash(entry) % table->size;
     dl_node_t node = dl_node_init(entry); // Create new node
@@ -140,6 +135,7 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
 }
 
 //============================================================================================
+
 void *hashtab_lookup(hashtab_t table_, void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 
@@ -247,4 +243,31 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     }
 #endif
     return NULL;
+}
+
+//============================================================================================
+
+hashtab_t hashtab_resize(hashtab_t table_, size_t newsize) {
+    struct hashtab_s *table = (struct hashtab_s *)table_;
+    assert(table);
+    assert(newsize);
+
+    // Creating a new hastable
+    struct hashtab_s *new_table = hashtab_init(newsize, table->hash, table->cmp, table->free);
+
+    // Creating node for passing through the old list
+    dl_node_t new_node = NULL;
+    void *new_node_data = NULL;
+
+    while (!dl_list_is_empty(table->list)) {
+        new_node = dl_list_pop_front(table->list);
+        new_node_data = dl_node_get_data(new_node);
+        hashtab_insert((hashtab_t *)&new_table, new_node_data);
+        // Clearing new_node
+        dl_node_free(new_node, NULL);
+    }
+
+    //  Free old hash table
+    hashtab_free(table);
+    return new_table;
 }

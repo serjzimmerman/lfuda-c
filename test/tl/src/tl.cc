@@ -10,7 +10,7 @@ struct ListDeleter {
 };
 
 class List {
-    std::unique_ptr<std::remove_pointer_t<dl_list_t>, ListDeleter> list;
+    std::unique_ptr<std::remove_pointer<dl_list_t>::type, ListDeleter> list;
 
   public:
     List() : list(dl_list_init(), ListDeleter{}) {

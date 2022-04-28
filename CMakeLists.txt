@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 project(lfuda)
 
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+    message(FATAL_ERROR "You dumb-dumb, in-source building is bad for your health.
+                        Please use medication, because you are mad ;)")
+endif()
+
 # Possibly support windows and MSVC compiler
 if(MSVC)
     add_compile_options(/W4 /WX)
