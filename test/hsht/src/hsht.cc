@@ -31,7 +31,7 @@ static int entry_cmp(void *a, void *b) {
 }
 
 TEST(TestHashTab, TestInsert) {
-    hashtab_t table = hashtab_init(128, entry_hash_mod2, entry_cmp, free);
+    hashtab_t table = hashtab_init(1, entry_hash_mod2, entry_cmp, free);
 
     entry_t *insert1 = entry_init(1);
     hashtab_insert(&table, insert1);
@@ -50,6 +50,8 @@ TEST(TestHashTab, TestInsert) {
     entry_t *entry3 = static_cast<entry_t *>(hashtab_remove(table, &key2));
     ASSERT_EQ(entry3->a, 3);
 
+    free(entry3);
+
     hashtab_free(table);
 }
 
@@ -62,9 +64,14 @@ TEST(TestHashTab, TestResize) {
     }
 
     entry_t key{2};
-    entry_t *entry = static_cast<entry_t *>(hashtab_remove(table, &key));
 
-    ASSERT_EQ(entry->a, 2);
+    entry_t *entry1 = static_cast<entry_t *>(hashtab_remove(table, &key));
+    entry_t *entry2 = static_cast<entry_t *>(hashtab_lookup(table, &key));
+
+    ASSERT_EQ(entry1->a, 2);
+    ASSERT_EQ(entry2, nullptr);
+
+    free(entry1);
 
     hashtab_free(table);
 }
