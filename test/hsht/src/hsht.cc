@@ -46,7 +46,27 @@ TEST(TestHashTab, TestInsert) {
     hashtab_insert(&table, entry_init(3));
     hashtab_insert(&table, insert1);
 
-    entry_t *entry3 = static_cast<entry_t *>(hashtab_remove(table, &key));
+    entry_t key2{3};
+    entry_t *entry3 = static_cast<entry_t *>(hashtab_remove(table, &key2));
+    ASSERT_EQ(entry3->a, 3);
+
+    hashtab_free(table);
+}
+
+TEST(TestHashTab, TestResize) {
+    hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
+
+    for (int i = 0; i < 10; i++) {
+        entry_t *insert = entry_init(i);
+        hashtab_insert(&table, insert);
+    }
+
+    entry_t key{2};
+    entry_t *entry = static_cast<entry_t *>(hashtab_remove(table, &key));
+
+    ASSERT_EQ(entry->a, 2);
+
+    hashtab_free(table);
 }
 
 // Run all tests
