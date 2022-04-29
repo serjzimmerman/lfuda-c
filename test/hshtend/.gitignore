@@ -1,0 +1,3 @@
+bin/*
+!bin/.keep
+resources/temp.dat

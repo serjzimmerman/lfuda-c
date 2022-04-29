@@ -1,4 +1,11 @@
+# Please you proper build directory or just use vscode
 build/
+# Install directory
 bin/*
 !bin/.keep
+# Vscode junk
 .vscode/
+
+# For masachism lovers (e.g. Alexander)
+CMakeFiles
+CMakeCache.txt
