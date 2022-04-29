@@ -44,12 +44,11 @@ struct hashtab_s {
     // Critical load factor
     float load_factor;
 
+    int automatic_resize;
     // Array of buckets that stores the pointers to the first node of the list with the hash corresponding to the index
     // This array is stored as a flexible array member
     buckets_t array[];
 };
-
-//============================================================================================
 
 #define DEFAULT_LOAD_FACTOR 0.7f
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc) {
@@ -65,11 +64,16 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     table->cmp = cmp;
     table->free = freefunc;
     table->load_factor = DEFAULT_LOAD_FACTOR;
+    table->automatic_resize = 1;
 
     return table;
 }
 
-//============================================================================================
+void hashtab_set_enabled_resize(hashtab_t table_, int enabled) {
+    struct hashtab_s *table = (struct hashtab_s *)table_;
+    assert(table);
+    table->automatic_resize = (enabled ? 1 : 0);
+}
 
 void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     struct hashtab_s *table = table_;
@@ -78,15 +82,11 @@ void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     table->load_factor = load_factor;
 }
 
-//============================================================================================
-
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
     free(table);
 }
-
-//============================================================================================
 
 hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -99,8 +99,6 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 
     return stat;
 }
-
-//============================================================================================
 
 static void hashtab_insert_impl(hashtab_t *table_, dl_node_t node) {
     struct hashtab_s *table = *(struct hashtab_s **)table_;
@@ -130,24 +128,24 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     assert(table);
     assert(entry);
 
-    if ((float)table->inserts > table->load_factor * (float)table->size) { // Resize if many insertions done
-        // This is a funny bug actually, because if initial size is one, then 2 * 1 - 1 is also 1 ;)
-        // So this is necessary to handle this edge case
-        size_t new_size = ENCR_MULTIPLIER * table->size - 1;
-        if (table->size == 1) {
-            new_size = ENCR_MULTIPLIER * table->size;
-        }
+    if (table->automatic_resize) {
+        if ((float)table->inserts > table->load_factor * (float)table->size) { // Resize if many insertions done
+            // This is a funny bug actually, because if initial size is one, then 2 * 1 - 1 is also 1 ;)
+            // So this is necessary to handle this edge case
+            size_t new_size = ENCR_MULTIPLIER * table->size - 1;
+            if (table->size == 1) {
+                new_size = ENCR_MULTIPLIER * table->size;
+            }
 
-        table = hashtab_resize(table, new_size);
-        // Note that new size is (old_size * MULT - 1) to avoid sizes that are powers of MULT
-        *table_ = table;
+            table = hashtab_resize(table, new_size);
+            // Note that new size is (old_size * MULT - 1) to avoid sizes that are powers of MULT
+            *table_ = table;
+        }
     }
 
     dl_node_t node = dl_node_init(entry); // Create new node
     hashtab_insert_impl(table_, node);
 }
-
-//============================================================================================
 
 void *hashtab_lookup(hashtab_t table_, const void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -186,8 +184,6 @@ void *hashtab_lookup(hashtab_t table_, const void *key) {
 
     return NULL;
 }
-
-//============================================================================================
 
 #ifdef HASHTAB_USE_N_OPTIMIZATION
 static inline void *hashtab_remove_use_n_impl(hashtab_t table_, void *key) {

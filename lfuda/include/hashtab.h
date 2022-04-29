@@ -55,6 +55,9 @@ hashtab_t hashtab_resize(hashtab_t table_, size_t newsize);
 // Remove key from the table an return entry by pointer, NULL if it's absent from the table
 void *hashtab_remove(hashtab_t table_, void *key);
 
+// Disable or enable automatic resizing
+void hashtab_set_enabled_resize(hashtab_t table_, int enabled);
+
 #ifdef __cplusplus
 }
 #endif
