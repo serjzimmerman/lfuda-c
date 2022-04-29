@@ -203,6 +203,14 @@ TEST(TestList, Test5) {
     });
 }
 
+TEST(TestList, Test6) {
+    int a = 0x0DED;
+    dl_node_t node = dl_node_init_fam(NULL, sizeof(int), static_cast<void *>(&a));
+    void *data = dl_node_get_fam(node);
+    ASSERT_EQ(*static_cast<int *>(data), 0x0DED);
+    dl_node_free(node, NULL);
+}
+
 // Run all tests
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

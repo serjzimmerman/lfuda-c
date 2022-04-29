@@ -3,6 +3,9 @@
 
 #ifdef __cplusplus
 extern "C" {
+#include <cstddef>
+#else
+#include <stddef.h>
 #endif
 
 // Handles to doubly linked list and node
@@ -39,6 +42,12 @@ dl_node_t dl_list_get_last(dl_list_t list_);
 
 // Create a list node with data member pointing to data and return the handle to it
 dl_node_t dl_node_init(void *data);
+
+// Create a list node with additional memory for flexible array member for storing arbitrary data with size and copy
+// fam_data to it
+dl_node_t dl_node_init_fam(void *data, size_t size, void *fam_data);
+
+void *dl_node_get_fam(dl_node_t node_);
 
 // Free node and if data_free != NULL call data_free() for node->data
 void dl_node_free(dl_node_t node_, void (*data_free)(void *));

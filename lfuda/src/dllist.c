@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 struct dl_node_s {
     struct dl_node_s *next, *prev;
@@ -17,6 +18,24 @@ dl_node_t dl_node_init(void *data) {
     struct dl_node_s *node = calloc_checked(1, sizeof(struct dl_node_s));
     node->data = data;
     return node;
+}
+
+dl_node_t dl_node_init_fam(void *data, size_t size, void *fam_data) {
+    assert(fam_data);
+    assert(size);
+
+    struct dl_node_s *node = calloc_checked(1, sizeof(struct dl_node_s) + size * sizeof(char));
+    node->data = data;
+    memcpy(node->fam, fam_data, size * sizeof(char));
+
+    return node;
+}
+
+// Return pointer to an internal fam data
+void *dl_node_get_fam(dl_node_t node_) {
+    struct dl_node_s *node = (struct dl_node_s *)node_;
+    assert(node);
+    return &(node->fam);
 }
 
 void dl_node_free(dl_node_t node_, void (*data_free)(void *)) {
