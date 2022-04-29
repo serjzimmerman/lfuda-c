@@ -55,24 +55,43 @@ TEST(TestHashTab, TestInsert) {
     hashtab_free(table);
 }
 
-TEST(TestHashTab, TestResize) {
+TEST(TastHashTab, TestRemove) {
     hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    for (int i = 0; i < 10; i++) {
+    const int testlen = 20;
+    const int notinserted = 235;
+
+    for (int i = 0; i < testlen; i++) {
         entry_t *insert = entry_init(i);
         hashtab_insert(&table, insert);
     }
 
-    entry_t key{2};
+    for (int i = 0; i < testlen; i++) {
+        entry_t key{i};
+        entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
+        ASSERT_EQ(entry->a, i);
+    }
+    entry_t key{notinserted};
+    entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
+    ASSERT_EQ(entry, nullptr);
 
-    entry_t *entry1 = static_cast<entry_t *>(hashtab_remove(table, &key));
-    entry_t *entry2 = static_cast<entry_t *>(hashtab_lookup(table, &key));
+    hashtab_free(table);
+}
 
-    ASSERT_EQ(entry1->a, 2);
-    ASSERT_EQ(entry2, nullptr);
+TEST(TestHashTab, TestResize) {
+    hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    free(entry1);
+    const int testlen = 20;
+    for (int i = 0; i < testlen; i++) {
+        entry_t *insert = entry_init(i);
+        hashtab_insert(&table, insert);
+    }
 
+    for (int i = 0; i < testlen; i++) {
+        entry_t key{i};
+        entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
+        ASSERT_EQ(entry->a, i);
+    }
     hashtab_free(table);
 }
 
