@@ -17,16 +17,16 @@ static entry_t *entry_init(int value) {
     return ptr;
 }
 
-static unsigned long entry_hash(void *entry) {
-    return static_cast<entry_t *>(entry)->a;
+static unsigned long entry_hash(const void *entry) {
+    return static_cast<const entry_t *>(entry)->a;
 }
 
-static unsigned long entry_hash_mod2(void *entry) {
-    return static_cast<entry_t *>(entry)->a % 2;
+static unsigned long entry_hash_mod2(const void *entry) {
+    return static_cast<const entry_t *>(entry)->a % 2;
 }
 
-static int entry_cmp(void *a, void *b) {
-    entry_t *first = static_cast<entry_t *>(a), *second = static_cast<entry_t *>(b);
+static int entry_cmp(const void *a, const void *b) {
+    const entry_t *first = static_cast<const entry_t *>(a), *second = static_cast<const entry_t *>(b);
     return first->a - second->a;
 }
 
@@ -58,8 +58,8 @@ TEST(TestHashTab, TestInsert) {
 TEST(TastHashTab, TestRemove) {
     hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    const int testlen = 20;
-    const int notinserted = 235;
+    constexpr int testlen = 20;
+    constexpr int notinserted = 235;
 
     for (int i = 0; i < testlen; i++) {
         entry_t *insert = entry_init(i);
@@ -71,6 +71,7 @@ TEST(TastHashTab, TestRemove) {
         entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
         ASSERT_EQ(entry->a, i);
     }
+
     entry_t key{notinserted};
     entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
     ASSERT_EQ(entry, nullptr);
@@ -81,7 +82,7 @@ TEST(TastHashTab, TestRemove) {
 TEST(TestHashTab, TestResize) {
     hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    const int testlen = 20;
+    constexpr int testlen = 20;
     for (int i = 0; i < testlen; i++) {
         entry_t *insert = entry_init(i);
         hashtab_insert(&table, insert);
@@ -92,6 +93,32 @@ TEST(TestHashTab, TestResize) {
         entry_t *entry = static_cast<entry_t *>(hashtab_lookup(table, &key));
         ASSERT_EQ(entry->a, i);
     }
+
+    hashtab_free(table);
+}
+
+TEST(TestHashTab, TestStat) {
+    hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
+
+    constexpr int testlen = 20;
+    for (int i = 0; i < testlen; i++) {
+        entry_t *insert = entry_init(i);
+        hashtab_insert(&table, insert);
+    }
+
+    for (int i = 0; i < testlen; i++) {
+        entry_t key{i};
+        entry_t *entry = static_cast<entry_t *>(hashtab_remove(table, &key));
+        ASSERT_EQ(entry->a, i);
+        free(entry);
+    }
+
+    hashtab_stat_t stat = hashtab_get_stat(table);
+
+    EXPECT_EQ(stat.collisions, 0);
+    EXPECT_EQ(stat.inserts, 0);
+    EXPECT_EQ(stat.used, 0);
+
     hashtab_free(table);
 }
 

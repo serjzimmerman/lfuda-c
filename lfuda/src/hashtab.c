@@ -102,7 +102,7 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 
 //============================================================================================
 
-void hashtab_insert_impl(hashtab_t *table_, dl_node_t node) {
+static void hashtab_insert_impl(hashtab_t *table_, dl_node_t node) {
     struct hashtab_s *table = *(struct hashtab_s **)table_;
 
     assert(table);
@@ -130,9 +130,16 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     assert(table);
     assert(entry);
 
-    // Commented out for the moment, awaiting implementation of the resize function
     if ((float)table->inserts > table->load_factor * (float)table->size) { // Resize if many insertions done
-        table = hashtab_resize(table, ENCR_MULTIPLIER * table->size - 1);
+        // This is a funny bug actually, because if initial size is one, then 2 * 1 - 1 is also 1 ;)
+        // So this is necessary to handle this edge case
+        size_t new_size = ENCR_MULTIPLIER * table->size - 1;
+        if (table->size == 1) {
+            new_size = ENCR_MULTIPLIER * table->size;
+        }
+
+        table = hashtab_resize(table, new_size);
+        // Note that new size is (old_size * MULT - 1) to avoid sizes that are powers of MULT
         *table_ = table;
     }
 
@@ -142,7 +149,7 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
 
 //============================================================================================
 
-void *hashtab_lookup(hashtab_t table_, void *key) {
+void *hashtab_lookup(hashtab_t table_, const void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 
     assert(table);
@@ -163,25 +170,27 @@ void *hashtab_lookup(hashtab_t table_, void *key) {
         }
         find = dl_node_get_next(find);
     }
-#else // using hash
+
+#else // Using hash
     unsigned long temphash = hash;
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
             return dl_node_get_data(find);
         }
         if (!(find = dl_node_get_next(find))) {
-            return NULL;
+            break;
         }
         temphash = table->hash(dl_node_get_data(find)) % table->size; // Update hash
     }
 #endif
+
     return NULL;
 }
 
 //============================================================================================
 
-// Bruh, this function is kinda big. Maybe split it into two?
-void *hashtab_remove(hashtab_t table_, void *key) {
+#ifdef HASHTAB_USE_N_OPTIMIZATION
+static inline void *hashtab_remove_use_n_impl(hashtab_t table_, void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 
     assert(table_);
@@ -190,14 +199,10 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     unsigned long hash = table->hash(key) % table->size;
     dl_list_t find = table->array[hash].node;
 
-    // Return value
-    void *result = NULL;
-
     if (!find) {
         return NULL;
     }
 
-#ifdef HASHTAB_USE_N_OPTIMIZATION // Using number of nodes in bucket
     size_t capacity = table->array[hash].n;
     for (size_t i = 0; i < capacity; i++) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
@@ -214,7 +219,26 @@ void *hashtab_remove(hashtab_t table_, void *key) {
         find = dl_node_get_next(find);
     }
 
-#else // using hash
+    return NULL;
+}
+#else
+
+static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
+    struct hashtab_s *table = (struct hashtab_s *)table_;
+
+    assert(table_);
+    assert(key);
+
+    unsigned long hash = table->hash(key) % table->size;
+    dl_list_t find = table->array[hash].node;
+
+    // Return value (pointer to the data)
+    void *result = NULL;
+
+    if (!find) {
+        return NULL;
+    }
+
     unsigned long temphash = hash;
     dl_node_t next = dl_node_get_next(find);
 
@@ -227,10 +251,12 @@ void *hashtab_remove(hashtab_t table_, void *key) {
         } else {
             // In this case there are more nodes after the first and we happily move the bucket pointer futher along
             table->array[hash].node = next;
+            table->collisions--;
         }
 
         // In any case the counter gets decremented
         table->inserts--;
+
         goto hashtab_remove_exit;
     }
 
@@ -242,17 +268,17 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     // From now on we can assume that there are some previous nodes with the same hash
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
+            table->collisions--;
             goto hashtab_remove_exit;
         }
 
-        find = dl_node_get_next(find);
-        if (!find) { // Remove node from the list and return it
-            return NULL;
+        if (!(find = dl_node_get_next(find))) {
+            break;
         }
 
         temphash = table->hash(dl_node_get_data(find)) % table->size; // update hash
     }
-#endif
+
     return NULL;
 
 // Handle all exiting from function. For whatever reason I get a compiler error when I try to declare a variable right
@@ -262,9 +288,17 @@ hashtab_remove_exit:
     dl_node_free(find, NULL);
     return result;
 }
+#endif
 
-//============================================================================================
+void *hashtab_remove(hashtab_t table_, void *key) {
+#ifdef HASHTAB_USE_N_OPTIMIZATION // Using number of nodes in bucket
+    return hashtab_remove_impl_use_n(table_, key);
+#else // Using hash
+    return hashtab_remove_impl_no_n_impl(table_, key);
+#endif
+}
 
+// Resize the table by moving nodes from the old table's list to a newly allocated one and return the handle.
 hashtab_t hashtab_resize(hashtab_t table_, size_t newsize) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 

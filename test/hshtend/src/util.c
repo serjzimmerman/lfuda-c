@@ -14,7 +14,7 @@ unsigned long sdbm(const char *str) {
 }
 
 long long getnc(char *dst, long long n) {
-    long long i, c;
+    long long i = 0, c = 0;
 
     assert(dst);
 
@@ -33,9 +33,8 @@ long long getnc(char *dst, long long n) {
 
 long long strtokn(char *src, const char *const delim, char **token) {
     static char *curr = NULL;
-    int len, i, c;
 
-    len = strlen(delim);
+    size_t len = strlen(delim);
 
     if (src) {
         curr = src;
@@ -50,7 +49,8 @@ long long strtokn(char *src, const char *const delim, char **token) {
         curr = src;
     }
 
-    c = 0;
+    int c = 0;
+    size_t i = 0;
 
     while (*curr != '\0') {
         for (i = 0; i < len; i++) {

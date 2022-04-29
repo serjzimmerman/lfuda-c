@@ -7,7 +7,7 @@
 /* djb2 hash function http://www.cse.yorku.ca/~oz/hash.html */
 unsigned long hash_djb2(const char *str) {
     unsigned long hash = 5381;
-    int c;
+    int c = 0;
 
     assert(str);
 
@@ -23,22 +23,19 @@ unsigned long spair_hash_djb2(const void *pair) {
 }
 
 spair_t spair_init(const char *key, pair_val_t value) {
-    struct spair_s *pair;
-    size_t len;
-
     assert(key);
 
     if (!key) {
         return NULL;
     }
 
-    pair = calloc(1, sizeof(struct spair_s));
+    struct spair_s *pair = calloc(1, sizeof(struct spair_s));
 
     if (!pair) {
         return NULL;
     }
 
-    len = strlen(key);
+    size_t len = strlen(key);
     pair->key = calloc(1, (len + 1) * sizeof(char));
 
     if (!pair->key) {

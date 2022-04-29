@@ -14,9 +14,9 @@ typedef void *hashtab_t;
 
 // Type for hashing function that accepts arbitrary object and must be defined by the user
 // Where details of the implementation are known
-typedef unsigned long (*hash_func_t)(void *);
+typedef unsigned long (*hash_func_t)(const void *);
 // Comparator function
-typedef int (*entry_cmp_func_t)(void *, void *);
+typedef int (*entry_cmp_func_t)(const void *, const void *);
 typedef void (*entry_free_func_t)(void *);
 
 // initialize hash table
@@ -47,7 +47,7 @@ void hashtab_insert(hashtab_t *table_, void *entry);
 
 // Lookup whether the entry is alredy present in the table
 // Returns pointer to the entry, NULL if is absent
-void *hashtab_lookup(hashtab_t table_, void *key);
+void *hashtab_lookup(hashtab_t table_, const void *key);
 
 // Resize the table to accomodate max newsize buckets
 hashtab_t hashtab_resize(hashtab_t table_, size_t newsize);

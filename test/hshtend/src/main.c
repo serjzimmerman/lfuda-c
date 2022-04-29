@@ -1,5 +1,6 @@
 #include "counter.h"
 #include "hashtab.h"
+#include "memutil.h"
 #include "util.h"
 
 #undef NDEBUG
@@ -14,14 +15,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct cmd_args_t {
-    char *input_path;
-} cmd_args_default = {NULL};
+const struct cmd_args_t { char *input_path; } cmd_args_default = {NULL};
 
 const char *const usage_string = "Usage: test [-i <path>]\n";
 
 int handle_input(int argc, char **argv, struct cmd_args_t *args) {
-    int c, p = 0;
+    int c = 0, p = 0;
 
     *args = cmd_args_default;
 
@@ -54,10 +53,8 @@ int handle_input(int argc, char **argv, struct cmd_args_t *args) {
 
 char *get_buf_from_file(struct cmd_args_t args, int *fd, size_t *len) {
     struct stat st;
-    char *buf;
-    int fdi;
 
-    fdi = open(args.input_path, O_RDONLY);
+    int fdi = open(args.input_path, O_RDONLY);
     if (fdi == -1) {
         fprintf(stderr, "Could not open input file %s\n", args.input_path);
         exit(EXIT_FAILURE);
@@ -66,7 +63,8 @@ char *get_buf_from_file(struct cmd_args_t args, int *fd, size_t *len) {
         fprintf(stderr, "Could not open input file %s\n", args.input_path);
         exit(EXIT_FAILURE);
     }
-    buf = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fdi, 0);
+
+    char *buf = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fdi, 0);
     *fd = fdi;
     *len = st.st_size;
 
@@ -74,21 +72,18 @@ char *get_buf_from_file(struct cmd_args_t args, int *fd, size_t *len) {
 }
 
 void application_loop_read_file(struct cmd_args_t args) {
-    struct counter_t *counter;
-    long long l, c;
-    char *buf, *tok;
-    int fdi;
-    size_t len;
+    char *tok = NULL;
+    int fdi = 0;
+    size_t len = 0;
 
-    buf = get_buf_from_file(args, &fdi, &len);
-
-    counter = counter_init(NULL);
+    char *buf = get_buf_from_file(args, &fdi, &len);
+    struct counter_s *counter = counter_init(NULL);
 
     strtokn(buf, " \n", &tok);
     strtokn(NULL, " \n", &tok);
-    l = atoll(tok);
 
-    c = 0;
+    long long l = atoll(tok);
+    long long c = 0;
 
     c += strtokn(NULL, " ", &tok);
     while (tok && c <= l + 1) {
@@ -118,20 +113,18 @@ void application_loop_read_file(struct cmd_args_t args) {
 }
 
 void application_loop_read_stdin() {
-    struct counter_t *counter;
     long long a, l;
     char *buf, *tok;
-    int res;
 
-    counter = counter_init(NULL);
+    struct counter_s *counter = counter_init(NULL);
 
-    res = scanf("%lld %lld", &a, &l);
+    int res = scanf("%lld %lld", &a, &l);
     if (res != 2) {
         fprintf(stderr, "Invalid input\n");
         exit(EXIT_FAILURE);
     }
 
-    buf = calloc(l + 1, sizeof(char));
+    buf = calloc_checked(l + 1, sizeof(char));
     if (!buf) {
         fprintf(stderr, "Unable to allocate memory\n");
         exit(EXIT_FAILURE);
@@ -156,7 +149,7 @@ void application_loop_read_stdin() {
         exit(EXIT_FAILURE);
     }
 
-    buf = calloc(l + 1, sizeof(char));
+    buf = calloc_checked(l + 1, sizeof(char));
     if (!buf) {
         fprintf(stderr, "Unable to allocate memory\n");
         exit(EXIT_FAILURE);

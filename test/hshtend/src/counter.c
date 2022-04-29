@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memutil.h"
+
 #define DEFAULT_COUNTER_SIZE 16
-struct counter_t {
+struct counter_s {
     hashtab_t table;
 };
 
-struct counter_t *counter_init() {
-    struct counter_t *counter;
-
-    counter = calloc(1, sizeof(struct counter_t));
+struct counter_s *counter_init() {
+    struct counter_s *counter = calloc_checked(1, sizeof(struct counter_s));
     assert(counter);
 
     counter->table = hashtab_init(DEFAULT_COUNTER_SIZE, spair_hash_djb2, spair_cmp, spair_free);
@@ -23,7 +23,7 @@ struct counter_t *counter_init() {
     return counter;
 }
 
-void counter_free(struct counter_t *counter, int free_table) {
+void counter_free(struct counter_s *counter, int free_table) {
     assert(counter);
 
     if (free_table) {
@@ -33,12 +33,11 @@ void counter_free(struct counter_t *counter, int free_table) {
     free(counter);
 }
 
-void counter_item_add(struct counter_t *counter, char *key) {
+void counter_item_add(struct counter_s *counter, char *key) {
     struct spair_s find;
-    spair_t pair;
     find.key = key;
 
-    pair = hashtab_lookup(counter->table, &find);
+    spair_t pair = hashtab_lookup(counter->table, &find);
 
     if (pair) {
         spair_set_value(pair, spair_get_value(pair) + 1);
@@ -48,12 +47,11 @@ void counter_item_add(struct counter_t *counter, char *key) {
     }
 }
 
-unsigned counter_item_get_count(struct counter_t *counter, char *key) {
+unsigned counter_item_get_count(struct counter_s *counter, char *key) {
     struct spair_s find;
-    spair_t pair;
     find.key = key;
 
-    pair = hashtab_lookup(counter->table, &find);
+    spair_t pair = hashtab_lookup(counter->table, &find);
 
     if (pair) {
         return spair_get_value(pair);
@@ -62,7 +60,7 @@ unsigned counter_item_get_count(struct counter_t *counter, char *key) {
     }
 }
 
-hashtab_t counter_get_hashtable(struct counter_t *counter) {
+hashtab_t counter_get_hashtable(struct counter_s *counter) {
     assert(counter);
 
     return counter->table;
