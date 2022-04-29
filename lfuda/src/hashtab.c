@@ -214,7 +214,9 @@ static inline void *hashtab_remove_use_n_impl(hashtab_t table_, void *key) {
             table->inserts--;
             table->array[hash].n--;
 
-            goto hashtab_remove_exit;
+            void *result = dl_node_get_data(dl_list_remove(table->list, find));
+            dl_node_free(find, NULL);
+            return result;
         }
         find = dl_node_get_next(find);
     }
@@ -292,7 +294,7 @@ hashtab_remove_exit:
 
 void *hashtab_remove(hashtab_t table_, void *key) {
 #ifdef HASHTAB_USE_N_OPTIMIZATION // Using number of nodes in bucket
-    return hashtab_remove_impl_use_n(table_, key);
+    return hashtab_remove_use_n_impl(table_, key);
 #else // Using hash
     return hashtab_remove_impl_no_n_impl(table_, key);
 #endif
