@@ -82,7 +82,7 @@ TEST(TastHashTab, TestRemove) {
 TEST(TestHashTab, TestResize) {
     hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    constexpr int testlen = 20;
+    constexpr int testlen = 10;
     for (int i = 0; i < testlen; i++) {
         entry_t *insert = entry_init(i);
         hashtab_insert(&table, insert);
@@ -105,19 +105,21 @@ TEST(TestHashTab, TestStat) {
         entry_t *insert = entry_init(i);
         hashtab_insert(&table, insert);
     }
+    hashtab_stat_t stat = hashtab_get_stat(table);
 
     for (int i = 0; i < testlen; i++) {
         entry_t key{i};
         entry_t *entry = static_cast<entry_t *>(hashtab_remove(table, &key));
+        EXPECT_NE(entry, nullptr);
         ASSERT_EQ(entry->a, i);
-        free(entry);
+        stat = hashtab_get_stat(table);
     }
 
-    hashtab_stat_t stat = hashtab_get_stat(table);
+    stat = hashtab_get_stat(table);
 
-    EXPECT_EQ(stat.collisions, 0);
-    EXPECT_EQ(stat.inserts, 0);
-    EXPECT_EQ(stat.used, 0);
+    ASSERT_EQ(stat.collisions, 0);
+    ASSERT_EQ(stat.inserts, 0);
+    ASSERT_EQ(stat.used, 0);
 
     hashtab_free(table);
 }
