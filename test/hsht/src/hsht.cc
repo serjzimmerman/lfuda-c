@@ -100,7 +100,7 @@ TEST(TestHashTab, TestResize) {
 TEST(TestHashTab, TestStat) {
     hashtab_t table = hashtab_init(1, entry_hash, entry_cmp, free);
 
-    constexpr int testlen = 20;
+    constexpr int testlen = 50;
     for (int i = 0; i < testlen; i++) {
         entry_t *insert = entry_init(i);
         hashtab_insert(&table, insert);
