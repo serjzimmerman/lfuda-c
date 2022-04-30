@@ -50,6 +50,8 @@ struct hashtab_s {
     buckets_t array[];
 };
 
+//============================================================================================================
+
 #define DEFAULT_LOAD_FACTOR 0.7f
 hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t cmp, entry_free_func_t freefunc) {
     assert(initial_size);
@@ -69,11 +71,15 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     return table;
 }
 
+//============================================================================================================
+
 void hashtab_set_enabled_resize(hashtab_t table_, int enabled) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     assert(table);
     table->automatic_resize = (enabled ? 1 : 0);
 }
+
+//============================================================================================================
 
 void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     struct hashtab_s *table = table_;
@@ -82,11 +88,15 @@ void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
     table->load_factor = load_factor;
 }
 
+//============================================================================================================
+
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
     free(table);
 }
+
+//============================================================================================================
 
 hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -99,6 +109,8 @@ hashtab_stat_t hashtab_get_stat(hashtab_t table_) {
 
     return stat;
 }
+
+//============================================================================================================
 
 static void hashtab_insert_impl(hashtab_t *table_, dl_node_t node) {
     struct hashtab_s *table = *(struct hashtab_s **)table_;
@@ -113,13 +125,15 @@ static void hashtab_insert_impl(hashtab_t *table_, dl_node_t node) {
         table->array[hash].node = node;
         table->buckets_used++;
     } else {
-        dl_list_insert_after(table->list, table->array[hash].node, node); // If there are a number of nodes in bucket,
+        dl_list_insert_after(table->list, table->array[hash].node, node); // If there are a number of nodes in bucket
         table->collisions++;                                              // insert after top of the sublist
     }
 #ifdef HASHTAB_USE_N_OPTIMIZATION
     table->array[hash].n++; // Increment number of nodes in bucket
 #endif
 }
+
+//============================================================================================================
 
 #define ENCR_MULTIPLIER 2
 void hashtab_insert(hashtab_t *table_, void *entry) {
@@ -146,6 +160,8 @@ void hashtab_insert(hashtab_t *table_, void *entry) {
     dl_node_t node = dl_node_init(entry); // Create new node
     hashtab_insert_impl(table_, node);
 }
+
+//============================================================================================================
 
 void *hashtab_lookup(hashtab_t table_, const void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -185,6 +201,8 @@ void *hashtab_lookup(hashtab_t table_, const void *key) {
     return NULL;
 }
 
+//============================================================================================================
+
 #ifdef HASHTAB_USE_N_OPTIMIZATION
 static inline void *hashtab_remove_use_n_impl(hashtab_t table_, void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
@@ -221,6 +239,8 @@ static inline void *hashtab_remove_use_n_impl(hashtab_t table_, void *key) {
 }
 #else
 
+//============================================================================================================
+
 static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
 
@@ -243,7 +263,7 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
     // If next is NULL, then we remove the entry from the bucket. The same applies if the next bucket has a different
     // hash
     if ((table->cmp(dl_node_get_data(find), key) == 0)) {
-        if (!next || (next && (table->hash(next) % table->size != hash))) {
+        if (!next || (next && (table->hash(dl_node_get_data(next)) % table->size != hash))) {
             table->array[hash].node = NULL;
             table->buckets_used--;
         } else {
@@ -258,7 +278,7 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
         goto hashtab_remove_exit;
     }
 
-    find = dl_node_get_next(find);
+    find = next;
     if (!find) {
         return NULL;
     }
@@ -267,6 +287,7 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
     while (temphash == hash) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
             table->collisions--;
+            table->inserts--;
             goto hashtab_remove_exit;
         }
 
@@ -288,6 +309,8 @@ hashtab_remove_exit:
 }
 #endif
 
+//============================================================================================================
+
 void *hashtab_remove(hashtab_t table_, void *key) {
 #ifdef HASHTAB_USE_N_OPTIMIZATION // Using number of nodes in bucket
     return hashtab_remove_use_n_impl(table_, key);
@@ -295,6 +318,8 @@ void *hashtab_remove(hashtab_t table_, void *key) {
     return hashtab_remove_impl_no_n_impl(table_, key);
 #endif
 }
+
+//============================================================================================================
 
 // Resize the table by moving nodes from the old table's list to a newly allocated one and return the handle.
 hashtab_t hashtab_resize(hashtab_t table_, size_t newsize) {
@@ -311,7 +336,6 @@ hashtab_t hashtab_resize(hashtab_t table_, size_t newsize) {
         dl_node_t node = dl_list_pop_front(table->list);
         hashtab_insert_impl((hashtab_t *)&new_table, node); // Move the node to the new table
     }
-
     //  Free old hash table
     hashtab_free(table);
     return new_table;
