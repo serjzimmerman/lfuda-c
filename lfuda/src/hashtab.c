@@ -61,7 +61,7 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     struct hashtab_s *table = calloc_checked(1, sizeof(struct hashtab_s));
     table->list = dl_list_init();
     table->size = initial_size;
-    table->array = calloc(initial_size, sizeof(buckets_t));
+    table->array = calloc_checked(initial_size, sizeof(buckets_t));
     table->hash = hash;
     table->cmp = cmp;
     table->free = freefunc;
