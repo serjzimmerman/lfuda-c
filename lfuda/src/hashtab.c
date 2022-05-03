@@ -47,7 +47,7 @@ struct hashtab_s {
     int automatic_resize;
     // Array of buckets that stores the pointers to the first node of the list with the hash corresponding to the index
     // This array is stored as a flexible array member
-    buckets_t array[];
+    buckets_t *array;
 };
 
 //============================================================================================================
@@ -58,10 +58,10 @@ hashtab_t hashtab_init(size_t initial_size, hash_func_t hash, entry_cmp_func_t c
     assert(hash);
     assert(cmp);
 
-    struct hashtab_s *table = calloc_checked(1, sizeof(struct hashtab_s) + initial_size * sizeof(buckets_t));
+    struct hashtab_s *table = calloc_checked(1, sizeof(struct hashtab_s));
     table->list = dl_list_init();
-
     table->size = initial_size;
+    table->array = calloc(initial_size, sizeof(buckets_t));
     table->hash = hash;
     table->cmp = cmp;
     table->free = freefunc;
@@ -93,6 +93,7 @@ void hashtab_set_load_factor(hashtab_t table_, float load_factor) {
 void hashtab_free(hashtab_t table_) {
     struct hashtab_s *table = (struct hashtab_s *)table_;
     dl_list_free(table->list, table->free);
+    free(table->array);
     free(table);
 }
 
