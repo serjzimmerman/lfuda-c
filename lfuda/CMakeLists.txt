@@ -5,7 +5,6 @@ set(LFUDA_SOURCES
     src/hashtab.c
     src/basecache.c
     src/lfu.c
-    src/clist.c
 )
 
 add_library(lfuda ${LFUDA_SOURCES})
