@@ -7,6 +7,7 @@
 #include "dllist.h"
 #include "hashtab.h"
 #include <assert.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
