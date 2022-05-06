@@ -5,8 +5,8 @@
 #include "hashtab.h"
 
 #ifdef __cplusplus
-extern "C" {
 #include <cstddef>
+extern "C" {
 #else
 #include <stddef.h>
 #endif

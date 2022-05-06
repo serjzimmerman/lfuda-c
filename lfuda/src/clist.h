@@ -7,14 +7,8 @@
 #include "dllist.h"
 #include "hashtab.h"
 #include <assert.h>
-#include <string.h>
-
-#ifdef __cplusplus
-extern "C" {
-#include <cstddef>
-#else
 #include <stddef.h>
-#endif
+#include <string.h>
 
 // Refer to http://dhruvbird.com/lfu.pdf for more information
 
@@ -84,9 +78,5 @@ static inline void local_node_set_fam(local_node_t node_, local_node_data_t fam_
     assert(fam);
     memcpy(fam, &fam_, sizeof(local_node_data_t));
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -2,8 +2,8 @@
 #define LFUDA_DLLIST_H
 
 #ifdef __cplusplus
-extern "C" {
 #include <cstddef>
+extern "C" {
 #else
 #include <stddef.h>
 #endif
