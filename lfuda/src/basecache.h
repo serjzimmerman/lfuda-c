@@ -6,13 +6,7 @@
 #include "hashtab.h"
 
 #include "clist.h"
-
-#ifdef __cplusplus
-extern "C" {
-#include <cstddef>
-#else
 #include <stddef.h>
-#endif
 
 // Refer to http://dhruvbird.com/lfu.pdf for more information
 
@@ -44,9 +38,5 @@ base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init);
 void base_cache_free(base_cache_t *cache);
 
 void *base_cache_get(base_cache_t *cache, void *index);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
