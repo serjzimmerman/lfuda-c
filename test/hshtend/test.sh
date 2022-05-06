@@ -23,7 +23,7 @@ do
     fi
 
     # Compare inputs
-    if diff -Z ${current_folder}/${base_folder}/ans${count}.dat ${current_folder}/${base_folder}/temp.dat;
+    if diff ${current_folder}/${base_folder}/ans${count}.dat ${current_folder}/${base_folder}/temp.dat;
     then
         echo "${green}Passed${reset}"
     else

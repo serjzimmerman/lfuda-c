@@ -114,7 +114,7 @@ void application_loop_read_file(struct cmd_args_t args) {
 
 void application_loop_read_stdin() {
     long long a, l;
-    char *buf, *tok;
+    char *buf, *tok, *nexttok;
 
     struct counter_s *counter = counter_init(NULL);
 
@@ -162,8 +162,9 @@ void application_loop_read_stdin() {
 
     tok = strtok(buf, " ");
     while (tok) {
-        printf((tok ? "%d " : "%d"), counter_item_get_count(counter, tok));
-        tok = strtok(NULL, " ");
+        nexttok = strtok(NULL, " ");
+        printf((nexttok ? "%d " : "%d"), counter_item_get_count(counter, tok));
+        tok = nexttok;
     }
 
     free(buf);
