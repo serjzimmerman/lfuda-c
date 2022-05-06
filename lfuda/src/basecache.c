@@ -12,7 +12,6 @@
 base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
     assert(cache);
 
-    // That's ridiculous
     assert(init.get);
     assert(init.cmp);
     assert(init.hash);

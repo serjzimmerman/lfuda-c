@@ -8,8 +8,6 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-// This is a draft of possible hash table interface
-
 typedef void *hashtab_t;
 
 // Type for hashing function that accepts arbitrary object and must be defined by the user

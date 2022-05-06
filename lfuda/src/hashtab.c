@@ -27,7 +27,7 @@ typedef struct {
 } buckets_t;
 
 struct hashtab_s {
-    // One big ass doubly linked lists that stores all of the entries
+    // Single doubly linked list that stores all of the entries
     dl_list_t list;
 
     // Utility functions that have to be provided by the user
