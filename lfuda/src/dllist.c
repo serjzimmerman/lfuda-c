@@ -7,10 +7,9 @@
 //                                            Zimmerman Sergey                                              //
 //----------------------------------------------------------------------------------------------------------//
 
+#include "dllist.h"
 #include "error.h"
 #include "memutil.h"
-
-#include "dllist.h"
 
 #include <assert.h>
 #include <stddef.h>

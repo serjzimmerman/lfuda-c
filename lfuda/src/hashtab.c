@@ -276,7 +276,9 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
         // In any case the counter gets decremented
         table->inserts--;
 
-        goto hashtab_remove_exit;
+        result = dl_node_get_data(dl_list_remove(table->list, find));
+        dl_node_free(find, NULL);
+        return result;
     }
 
     find = next;
@@ -289,7 +291,10 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
         if (table->cmp(dl_node_get_data(find), key) == 0) {
             table->collisions--;
             table->inserts--;
-            goto hashtab_remove_exit;
+
+            result = dl_node_get_data(dl_list_remove(table->list, find));
+            dl_node_free(find, NULL);
+            return result;
         }
 
         if (!(find = dl_node_get_next(find))) {
@@ -300,13 +305,6 @@ static inline void *hashtab_remove_impl_no_n_impl(hashtab_t table_, void *key) {
     }
 
     return NULL;
-
-// Handle all exiting from function. For whatever reason I get a compiler error when I try to declare a variable right
-// after a marker. This code is here to plug up some memory leaks
-hashtab_remove_exit:
-    result = dl_node_get_data(dl_list_remove(table->list, find));
-    dl_node_free(find, NULL);
-    return result;
 }
 #endif
 
