@@ -43,14 +43,11 @@ local_node_t base_cache_lookup(base_cache_t *cache, void *index) {
     return dl_node_get_data(check_node);
 }
 
-// If a node stays in hash table after removing
 local_node_t base_cache_remove(base_cache_t *cache, local_node_t node) {
     assert(cache);
     assert(cache->table);
     assert(cache->hash);
-#if 1
     hashtab_remove(cache->table, local_node_get_fam(node).cached);
-#endif
     // Rebounding of knots
     local_list_t frec_node = local_node_get_fam(node).cached;
     return dl_list_remove(frec_node, node);
