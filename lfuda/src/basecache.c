@@ -32,3 +32,32 @@ base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
 
     return cache;
 }
+
+local_node_t base_cache_lookup(base_cache_t *cache, void *index) {
+    assert(cache);
+    assert(cache->table);
+    assert(cache->hash);
+
+    dl_node_t check_node = hashtab_lookup(cache->table, index);
+
+    return dl_node_get_data(check_node);
+}
+
+// If a node stays in hash table after removing
+local_node_t base_cache_remove(base_cache_t *cache, local_node_t node) {
+    assert(cache);
+    assert(cache->table);
+    assert(cache->hash);
+#if 1
+    hashtab_remove(cache->table, local_node_get_fam(node).cached);
+#endif
+    // Rebounding of knots
+    local_list_t frec_node = local_node_get_fam(node).cached;
+    return dl_list_remove(frec_node, node);
+}
+
+// Inserting in front due to more comfortable replacemnt for LFU policy
+void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert) {
+    assert(cache);
+    dl_list_push_back(freqnode, toinsert);
+}
