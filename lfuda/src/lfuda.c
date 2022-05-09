@@ -18,13 +18,19 @@ struct lfuda_s {
     base_cache_t base;
 };
 
+//============================================================================================================
+
 size_t lfuda_get_next_key(local_node_data_t local_data) { // possible change arguments
     // TODO: ajlekcahdp4 - implement
 }
 
+//============================================================================================================
+
 freq_node_t lfuda_get_next_freq(freq_node_t *freq_node, size_t new_key) {
     // TODO: ajlekcahdp4 - implement
 }
+
+//============================================================================================================
 
 lfuda_t lfuda_init(cache_init_t init) {
     struct lfuda_s *lfuda = calloc_checked(1, sizeof(struct lfuda_s));
@@ -32,11 +38,15 @@ lfuda_t lfuda_init(cache_init_t init) {
     return lfuda;
 }
 
+//============================================================================================================
+
 void lfuda_free(lfuda_t cache) {
     struct lfuda_s *lfuda = (struct lfuda_s *)cache;
     hashtab_free(lfuda->base.table);
     /* TODO: ajlekcahdp4 - add free of cache list, red black tree, etc.*/
 }
+
+//============================================================================================================
 
 // Temporary define (needs to be replaced)
 #define LFUDA_INITIAL_FREQ
@@ -105,7 +115,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         toinsert = local_node_init(first_freq, local_data);
         dl_list_push_front(freq_node_get_local(first_freq), toinsert);
     } else {
-        // TODO: ajlekcahdp4 - implement cache ivicting and insertion
+        // TODO: ajlekcahdp4 - implement cache evicting and insertion
     }
 
     hashtab_insert(&cache->table, hash_entry_init(index, toinsert));
