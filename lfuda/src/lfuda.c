@@ -18,6 +18,14 @@ struct lfuda_s {
     base_cache_t base;
 };
 
+size_t lfuda_get_next_key(local_node_data_t local_data) { // possible change arguments
+    // TODO: ajlekcahdp4 - implement
+}
+
+freq_node_t lfuda_get_next_freq(freq_node_t *freq_node, size_t new_key) {
+    // TODO: ajlekcahdp4 - implement
+}
+
 lfuda_t lfuda_init(cache_init_t init) {
     struct lfuda_s *lfuda = calloc_checked(1, sizeof(struct lfuda_s));
     base_cache_init(&lfuda->base, init);
@@ -57,8 +65,8 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         // with another key (not just incremented)
         dl_list_remove(freq_node_get_local(root_node), found->local);
 
-        freq_node_t new_freq = lfuda_get_next_freq(root_node); // NOT IMPLEMENTED YET
-        size_t new_key = lfuda_get_next_key(local_data);       // NOT IMPLEMENTED YET
+        size_t new_key = lfuda_get_next_key(local_data);                // NOT IMPLEMENTED YET
+        freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key); // NOT IMPLEMENTED YET
 
         if (next_freq) {
             dl_list_push_front(freq_node_get_local(next_freq), found->local);
