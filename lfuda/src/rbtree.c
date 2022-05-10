@@ -36,6 +36,53 @@ rb_tree_t rb_tree_init(rb_cmp_func_t cmp) {
     return tree;
 }
 
+static void rb_tree_free_no_data_impl(rb_node_t *root) {
+    assert(root);
+
+    if (root->right) {
+        rb_tree_free_no_data_impl(root->right);
+    }
+
+    if (root->left) {
+        rb_tree_free_no_data_impl(root->left);
+    }
+
+    free(root);
+}
+
+static void rb_tree_free_data_impl(rb_node_t *root, rb_free_func_t data_free) {
+    assert(root);
+    assert(data_free);
+
+    if (root->right) {
+        rb_tree_free_data_impl(root->right, data_free);
+    }
+
+    if (root->left) {
+        rb_tree_free_data_impl(root->left, data_free);
+    }
+
+    data_free(root->data);
+    free(root);
+}
+
+void rb_tree_free(rb_tree_t tree_, rb_free_func_t data_free) {
+    struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
+
+    if (!tree->root) {
+        free(tree);
+        return;
+    }
+
+    if (data_free) {
+        rb_tree_free_data_impl(tree->root, data_free);
+    } else {
+        rb_tree_free_no_data_impl(tree->root);
+    }
+
+    free(tree);
+}
+
 // If node is NULL then it is considered black
 static inline enum node_color_e get_node_color(rb_node_t *node) {
     return (node ? node->color : COLOR_BLACK);
