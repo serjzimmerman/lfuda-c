@@ -427,7 +427,7 @@ static void recolor_after_remove(struct rb_tree_s *tree, rb_node_t *leaf) {
 
         // Nephew is the right child of a sibling
         // Niece is the left child of a sibling
-        rb_node_t *nephew = sibling->right;
+        rb_node_t *nephew = (sibling ? sibling->right : NULL);
         if (get_node_color(nephew) == COLOR_RED) {
             sibling->color = leaf->parent->color;
             leaf->parent->color = COLOR_BLACK;
@@ -437,13 +437,15 @@ static void recolor_after_remove(struct rb_tree_s *tree, rb_node_t *leaf) {
             break;
         }
 
-        rb_node_t *niece = sibling->left;
-        if (get_node_color(sibling) == COLOR_RED) {
+        rb_node_t *niece = (sibling ? sibling->left : NULL);
+        if (get_node_color(niece) == COLOR_RED) {
             niece->color = COLOR_BLACK;
             sibling->color = COLOR_RED;
             rotate_to_parent(tree, niece);
         } else {
-            sibling->color = COLOR_RED;
+            if (sibling) {
+                sibling->color = COLOR_RED;
+            }
             leaf = leaf->parent;
         }
     }
@@ -527,6 +529,7 @@ static rb_tree_valid_t validate_subtree_rb(rb_node_t *root) {
     // Check Rule@4
     if (get_node_color(root) == COLOR_RED &&
         (get_node_color(root->left) == COLOR_RED || get_node_color(root->right) == COLOR_RED)) {
+        WARNING("Property 4 violated: two consecutive red nodes\n");
         return valid_inits(0, 0);
     }
 
@@ -536,6 +539,9 @@ static rb_tree_valid_t validate_subtree_rb(rb_node_t *root) {
     rb_tree_valid_t left = validate_subtree_rb(root->left);
 
     if (!right.valid || !left.valid || (right.blacks != left.blacks)) {
+        if (right.blacks != left.blacks) {
+            WARNING("Property 5 violated: black height does not match: %lu != %lu\n", right.blacks, left.blacks);
+        }
         return valid_inits(0, 0);
     } else {
         return valid_inits(right.blacks + (get_node_color(root) == COLOR_BLACK ? 1 : 0), 1);
