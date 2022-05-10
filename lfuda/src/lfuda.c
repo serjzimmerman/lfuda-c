@@ -49,7 +49,7 @@ void lfuda_free(lfuda_t cache) {
 //============================================================================================================
 
 // Temporary define (needs to be replaced)
-#define LFUDA_INITIAL_FREQ
+#define LFUDA_INITIAL_FREQ 1
 
 void *lfuda_get(lfuda_t cache_, void *index) {
     struct base_cache_s *cache = (struct base_cache_s *)cache_;
@@ -78,8 +78,8 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         size_t new_key = lfuda_get_next_key(local_data);                // NOT IMPLEMENTED YET
         freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key); // NOT IMPLEMENTED YET
 
-        if (next_freq) {
-            dl_list_push_front(freq_node_get_local(next_freq), found->local);
+        if (new_freq) {
+            dl_list_push_front(freq_node_get_local(new_freq), found->local);
         } else {
             new_freq = freq_node_init(new_key);
             dl_list_insert_after(cache->freq_list, root_node, new_freq);
@@ -108,7 +108,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
         // check if first_freq exist and key of first freq is equal to intial freq
         if (!first_freq || freq_node_get_key(first_freq) != LFUDA_INITIAL_FREQ) {
-            first_freq = freq_node_init(first_freq, local_data);
+            first_freq = freq_node_init(LFUDA_INITIAL_FREQ);
             dl_list_push_front(cache->freq_list, first_freq);
         }
 
