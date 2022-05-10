@@ -16,12 +16,17 @@
 
 struct lfuda_s {
     base_cache_t base;
+    size_t age;
 };
 
 //============================================================================================================
 
-size_t lfuda_get_next_key(local_node_data_t local_data) { // possible change arguments
-    // TODO: ajlekcahdp4 - implement
+#define LFUDA_FREQ_COEF 1
+
+size_t lfuda_get_next_key(lfuda_t cache_, local_node_data_t local_data) {
+    struct lfuda_s *cache = (struct lfuda_s *)cache_;
+    size_t new_key = LFUDA_FREQ_COEF * local_data.frequency + cache->age;
+    return new_key;
 }
 
 //============================================================================================================
@@ -75,7 +80,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         // with another key (not just incremented)
         dl_list_remove(freq_node_get_local(root_node), found->local);
 
-        size_t new_key = lfuda_get_next_key(local_data);                // NOT IMPLEMENTED YET
+        size_t new_key = lfuda_get_next_key(cache, local_data);         // NOT IMPLEMENTED YET
         freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key); // NOT IMPLEMENTED YET
 
         if (new_freq) {
