@@ -81,18 +81,19 @@ void lfuda_free(lfuda_t cache) {
 #define LFUDA_INITIAL_FREQ 1
 
 void *lfuda_get(lfuda_t cache_, void *index) {
-    struct base_cache_s *cache = (struct base_cache_s *)cache_;
+    struct lfuda_s *lfuda = (struct lfuda_s *)cache_;
+    struct base_cache_s *basecache = (struct base_cache_s *)cache_;
 
-    assert(cache);
+    assert(lfuda);
 
     entry_t key = {0};
     key.index = index;
 
-    entry_t *found = hashtab_lookup(cache->table, &key);
+    entry_t *found = hashtab_lookup(basecache->table, &key);
 
     if (found) {
         // increment cache hits
-        cache->hits += 1;
+        basecache->hits += 1;
 
         // get data and root node of local node
         local_node_data_t local_data = local_node_get_fam(found->local);
@@ -104,14 +105,14 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         // with another key (not just incremented)
         dl_list_remove(freq_node_get_local(root_node), found->local);
 
-        size_t new_key = lfuda_get_next_key(cache, local_data);         // NOT IMPLEMENTED YET
+        size_t new_key = lfuda_get_next_key(lfuda, local_data);         // NOT IMPLEMENTED YET
         freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key); // NOT IMPLEMENTED YET
 
         if (new_freq) {
             dl_list_push_front(freq_node_get_local(new_freq), found->local);
         } else {
             new_freq = freq_node_init(new_key);
-            dl_list_insert_after(cache->freq_list, root_node, new_freq);
+            dl_list_insert_after(basecache->freq_list, root_node, new_freq);
             dl_list_push_front(freq_node_get_local(new_freq), found->local);
         }
 
@@ -121,24 +122,24 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         return local_node_get_fam(found->local).cached;
     }
 
-    void *page = cache->slow_get(index);
+    void *page = basecache->slow_get(index);
     local_node_t toinsert = NULL;
 
-    if (cache->curr_top < cache->size) {
-        char *curr_data_ptr = cache->cached_data + cache->data_size * cache->curr_top;
-        memcpy(curr_data_ptr, page, cache->data_size);
+    if (basecache->curr_top < basecache->size) {
+        char *curr_data_ptr = basecache->cached_data + basecache->data_size * basecache->curr_top;
+        memcpy(curr_data_ptr, page, basecache->data_size);
 
         // intialize local_data with current info
         local_node_data_t local_data;
         local_data.cached = curr_data_ptr;
         local_data.frequency = LFUDA_INITIAL_FREQ; // initial frequency/weight
 
-        freq_node_t first_freq = dl_list_get_first(cache->freq_list);
+        freq_node_t first_freq = dl_list_get_first(basecache->freq_list);
 
         // check if first_freq exist and key of first freq is equal to intial freq
         if (!first_freq || freq_node_get_key(first_freq) != LFUDA_INITIAL_FREQ) {
             first_freq = freq_node_init(LFUDA_INITIAL_FREQ);
-            dl_list_push_front(cache->freq_list, first_freq);
+            dl_list_push_front(basecache->freq_list, first_freq);
         }
 
         toinsert = local_node_init(first_freq, local_data);
@@ -147,6 +148,6 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         // TODO: ajlekcahdp4 - implement cache evicting and insertion
     }
 
-    hashtab_insert(&cache->table, hash_entry_init(index, toinsert));
+    hashtab_insert(&basecache->table, hash_entry_init(index, toinsert));
     return page;
 }
