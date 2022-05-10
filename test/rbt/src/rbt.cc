@@ -46,7 +46,7 @@ template <typename T> class RBTree {
     }
 };
 
-template <typename T> void ASSERT_RB_TREE_VALID(RBTree<T> &tree) {
+template <typename T> void EXPECT_RB_TREE_VALID(RBTree<T> &tree) {
     EXPECT_TRUE(rb_tree_is_valid(tree));
 }
 
@@ -61,22 +61,36 @@ template <> const char *Stringify<int>(const void *a) {
 TEST(TestRBTree, Test1) {
     RBTree<int> tree{};
 
-    for (int i = 1; i < (2 << 10); ++i) {
+    for (int i = 0; i < (1 << 10); ++i) {
         tree.Insert(i);
     }
 
-    ASSERT_RB_TREE_VALID(tree);
+    EXPECT_RB_TREE_VALID(tree);
 
-    for (int i = 1; i < (2 << 9); ++i) {
+    for (int i = 0; i < (1 << 9); ++i) {
         tree.Remove(i);
     }
 
-    ASSERT_RB_TREE_VALID(tree);
+    EXPECT_RB_TREE_VALID(tree);
+}
 
-    FILE *fp = fopen("test.dot", "w");
-    rb_tree_dump(tree, fp, Stringify<int>);
+TEST(TestRBTree, Test2) {
+    RBTree<int> tree{};
 
-    fclose(fp);
+    constexpr int modulo = (1 << 20);
+
+    std::srand(0x0DED);
+    for (int i = 0; i < modulo; ++i) {
+        tree.Insert(std::rand() % modulo);
+    }
+
+    EXPECT_RB_TREE_VALID(tree);
+
+    for (int i = 0; i < modulo >> 2; ++i) {
+        tree.Remove(i);
+    }
+
+    EXPECT_RB_TREE_VALID(tree);
 }
 
 // Run all tests
