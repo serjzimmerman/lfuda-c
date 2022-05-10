@@ -6,6 +6,7 @@ set(LFUDA_SOURCES
     src/basecache.c
     src/lfu.c
     src/rbtree.c
+    src/lfuda.c
 )
 
 add_library(lfuda ${LFUDA_SOURCES})

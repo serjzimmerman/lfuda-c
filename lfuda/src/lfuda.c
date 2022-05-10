@@ -21,6 +21,18 @@ struct lfuda_s {
 
 //============================================================================================================
 
+entry_t *hash_entry_init(void *index, local_node_t local) {
+    entry_t *entry = calloc_checked(1, sizeof(entry_t));
+    assert(index);
+
+    entry->index = index;
+    entry->local = local;
+
+    return entry;
+}
+
+//============================================================================================================
+
 #define LFUDA_FREQ_COEF 1
 
 size_t lfuda_get_next_key(lfuda_t cache_, local_node_data_t local_data) {
