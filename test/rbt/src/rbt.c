@@ -26,8 +26,8 @@ const char *int_stringify(void *a) {
 int main() {
     rb_tree_t tree = rb_tree_init(intcmp);
 
-    for (int i = 0; i < 256; ++i) {
-        int *key = int_init_with_value(rand() % (1 << 16));
+    for (int i = 1; i < 32; ++i) {
+        int *key = int_init_with_value(i);
 
         int *found = rb_tree_lookup(tree, key);
         if (!found) {
@@ -35,6 +35,10 @@ int main() {
         } else {
             printf("%d\n", *found);
         }
+    }
+
+    for (int i = 1; i <= 16; ++i) {
+        free(rb_tree_remove(tree, &i));
     }
 
     FILE *fp = fopen("test.dot", "w");

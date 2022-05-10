@@ -36,6 +36,38 @@ rb_tree_t rb_tree_init(rb_cmp_func_t cmp) {
     return tree;
 }
 
+// If node is NULL then it is considered black
+static inline enum node_color_e get_node_color(rb_node_t *node) {
+    return (node ? node->color : COLOR_BLACK);
+}
+
+// Check wheter the node is a left child
+static inline int is_left_child(rb_node_t *node) {
+    assert(node);
+    assert(node->parent);
+
+    return (node == node->parent->left ? 1 : 0);
+}
+
+// Check wheter the node is a right child
+static inline int is_right_child(rb_node_t *node) {
+    assert(node);
+    assert(node->parent);
+
+    return (node == node->parent->right ? 1 : 0);
+}
+
+static inline rb_node_t *get_sibling(rb_node_t *node) {
+    assert(node);
+    assert(node->parent);
+
+    if (is_left_child(node)) {
+        return node->parent->right;
+    } else {
+        return node->parent->left;
+    }
+}
+
 static rb_node_t *rb_tree_bst_insert(struct rb_tree_s *tree, void *toinsert, rb_cmp_func_t cmp) {
     assert(tree);
     assert(toinsert);
@@ -72,11 +104,6 @@ static rb_node_t *rb_tree_bst_insert(struct rb_tree_s *tree, void *toinsert, rb_
     return node;
 }
 
-// If node is NULL then it is considered black
-static inline enum node_color_e get_node_color(rb_node_t *node) {
-    return (node ? node->color : COLOR_BLACK);
-}
-
 // Perform left rotate operation on the node
 static void left_rotate(struct rb_tree_s *tree, rb_node_t *node) {
     assert(tree);
@@ -95,7 +122,7 @@ static void left_rotate(struct rb_tree_s *tree, rb_node_t *node) {
 
     if (!root->parent) {
         tree->root = rchild;
-    } else if (root->parent->left == root) {
+    } else if (is_left_child(root)) {
         root->parent->left = rchild;
     } else {
         root->parent->right = rchild;
@@ -123,7 +150,7 @@ static void right_rotate(struct rb_tree_s *tree, rb_node_t *node) {
 
     if (!root->parent) {
         tree->root = lchild;
-    } else if (root->parent->right == root) {
+    } else if (is_right_child(root)) {
         root->parent->right = lchild;
     } else {
         root->parent->left = lchild;
@@ -133,49 +160,85 @@ static void right_rotate(struct rb_tree_s *tree, rb_node_t *node) {
     root->parent = lchild;
 }
 
+static void rotate_to_parent(struct rb_tree_s *tree, rb_node_t *node) {
+    assert(tree);
+    assert(node);
+
+    if (is_left_child(node)) {
+        right_rotate(tree, node->parent);
+    } else {
+        left_rotate(tree, node->parent);
+    }
+}
+
+static void replace_node(rb_node_t *root, rb_node_t *child, struct rb_tree_s *tree) {
+    assert(root);
+    assert(tree);
+
+    if (child) {
+        child->parent = root->parent;
+    }
+
+    // If root is the root of the tree, then set tree->root to the child
+    if (!root->parent) {
+        tree->root = child;
+        return;
+    }
+
+    if (is_left_child(root)) {
+        root->parent->left = child;
+    } else {
+        root->parent->right = child;
+    }
+}
+
+static rb_node_t *get_uncle(rb_node_t *node) {
+    assert(node);
+    assert(node->parent);
+    assert(node->parent->parent);
+
+    if (is_right_child(node->parent)) {
+        return node->parent->parent->left;
+    } else {
+        return node->parent->parent->right;
+    }
+}
+
+static int is_linear(rb_node_t *node) {
+    assert(node);
+    assert(node->parent);
+    assert(node->parent->parent);
+
+    return (is_left_child(node) && is_left_child(node->parent)) ||
+           (is_right_child(node) && is_right_child(node->parent));
+}
+
+// https://www.youtube.com/watch?v=KRWm1uhqMNI
+// This is an incredibly good explanation of the algorithm
 static void recolor_after_insert(struct rb_tree_s *tree, rb_node_t *node) {
     assert(tree);
     assert(node);
 
     while (get_node_color(node->parent) == COLOR_RED) {
-        if (node->parent == node->parent->parent->right) {
-            rb_node_t *uncle = node->parent->parent->left;
-
-            if (get_node_color(uncle) == COLOR_RED) {
-                node->parent->color = COLOR_BLACK;
-                uncle->color = COLOR_BLACK;
-                node->parent->parent->color = COLOR_RED;
-                node = node->parent->parent;
-            } else {
-                if (node == node->parent->left) {
-                    node = node->parent;
-                    right_rotate(tree, node);
-                }
-                node->parent->color = COLOR_BLACK;
-                node->parent->parent->color = COLOR_RED;
-                left_rotate(tree, node->parent->parent);
-            }
-        } else {
-            rb_node_t *uncle = node->parent->parent->right;
-
-            if (get_node_color(uncle) == COLOR_RED) {
-                node->parent->color = COLOR_BLACK;
-                uncle->color = COLOR_BLACK;
-                node->parent->parent->color = COLOR_RED;
-                node = node->parent->parent;
-            } else {
-                if (node == node->parent->right) {
-                    node = node->parent;
-                    left_rotate(tree, node);
-                }
-                node->parent->color = COLOR_BLACK;
-                node->parent->parent->color = COLOR_RED;
-                right_rotate(tree, node->parent->parent);
-            }
+        if (node == tree->root || (node->parent && node->parent->color == COLOR_BLACK)) {
+            break;
         }
 
-        if (node == tree->root) {
-            break;
+        rb_node_t *uncle = get_uncle(node);
+        if (get_node_color(uncle) == COLOR_RED) {
+            node->parent->color = COLOR_BLACK;
+            uncle->color = COLOR_BLACK;
+            node->parent->parent->color = COLOR_RED;
+            node = node->parent->parent;
+        } else {
+            if (!is_linear(node)) {
+                rb_node_t *old = node->parent;
+                rotate_to_parent(tree, node);
+                node = old;
+            }
+            node->parent->color = COLOR_BLACK;
+            node->parent->parent->color = COLOR_RED;
+            rotate_to_parent(tree, node->parent);
         }
     }
 
@@ -201,21 +264,7 @@ void rb_tree_insert(rb_tree_t tree_, void *toinsert) {
 static rb_node_t *rb_tree_lookup_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
     assert(cmp);
     assert(key);
-// Recursive approach to lookup
-#if 0
-    int cmp_result;
 
-    if (!root || !(cmp_result = cmp(root->data, key))) {
-        return root;
-    }
-
-    // Then root->data is less than key, recursively search right branch of the tree
-    if (cmp_result < 0) {
-        return rb_tree_lookup_impl(root->right, key, cmp);
-    }
-
-    return rb_tree_lookup_impl(root->left, key, cmp);
-#else
     if (!root) {
         return NULL;
     }
@@ -234,7 +283,6 @@ static rb_node_t *rb_tree_lookup_impl(rb_node_t *root, void *key, rb_cmp_func_t 
     }
 
     return root;
-#endif
 }
 
 void *rb_tree_lookup(rb_tree_t tree_, void *key) {
@@ -245,6 +293,135 @@ void *rb_tree_lookup(rb_tree_t tree_, void *key) {
 
     rb_node_t *found = rb_tree_lookup_impl(tree->root, key, tree->cmp);
     return (found ? found->data : NULL);
+}
+
+static rb_node_t *rb_tree_get_max_impl(rb_node_t *root) {
+    while (root->right) {
+        root = root->right;
+    }
+    return root;
+}
+
+static rb_node_t *rb_tree_get_min_impl(rb_node_t *root) {
+    while (root->left) {
+        root = root->left;
+    }
+    return root;
+}
+
+static inline void swap_data(rb_node_t *a, rb_node_t *b) {
+    void *temp = a->data;
+    a->data = b->data;
+    b->data = temp;
+}
+
+// This function swaps todelete node data with a leaf node that can then be safely pruned after red-black violation
+// fix-up
+static rb_node_t *rb_tree_remove_impl(rb_node_t *root, struct rb_tree_s *tree, void *todelete) {
+    assert(tree);
+    assert(todelete);
+
+    rb_node_t *node = rb_tree_lookup_impl(root, todelete, tree->cmp);
+
+    // Trying to delete a node that is not present in the tree
+    if (!node) {
+        return NULL;
+    }
+
+    // Result is the node that will be deleted and passed back from the function
+    rb_node_t *found = node;
+
+    // Case 1: The node has 0 children
+    if (!found->left && !found->right) {
+        return found;
+    }
+
+    // Case 2 and 3: The node has a single child or 2 children
+    if (found->right) {
+        rb_node_t *successor = rb_tree_get_min_impl(found->right);
+        swap_data(found, successor);
+        rb_tree_remove_impl(found->right, tree, successor->data);
+    } else {
+        rb_node_t *predecessor = rb_tree_get_max_impl(found->left);
+        swap_data(found, predecessor);
+        rb_tree_remove_impl(found->left, tree, predecessor->data);
+    }
+}
+
+static inline void prune_leaf(struct rb_tree_s *tree, rb_node_t *toprune) {
+    assert(tree);
+    assert(toprune);
+
+    if (!toprune->parent) {
+        tree->root = NULL;
+        return;
+    }
+
+    if (is_left_child(toprune)) {
+        toprune->parent->left = NULL;
+    } else {
+        toprune->parent->right = NULL;
+    }
+}
+
+static void recolor_after_remove(struct rb_tree_s *tree, rb_node_t *leaf) {
+    while (get_node_color(leaf) != COLOR_RED) {
+        if (!leaf->parent) {
+            break;
+        }
+
+        rb_node_t *sibling = get_sibling(leaf);
+        if (get_node_color(sibling) == COLOR_RED) {
+            leaf->parent->color = COLOR_RED;
+            sibling->color = COLOR_BLACK;
+            rotate_to_parent(tree, sibling);
+            continue;
+        }
+
+        // Nephew is the right child of a sibling
+        // Niece is the left child of a sibling
+        rb_node_t *nephew = sibling->right;
+        if (get_node_color(nephew) == COLOR_RED) {
+            sibling->color = leaf->parent->color;
+            leaf->parent->color = COLOR_BLACK;
+            nephew->color = COLOR_BLACK;
+            rotate_to_parent(tree, sibling);
+            leaf = tree->root;
+            break;
+        }
+
+        rb_node_t *niece = sibling->left;
+        if (get_node_color(sibling) == COLOR_RED) {
+            niece->color = COLOR_BLACK;
+            sibling->color = COLOR_RED;
+            rotate_to_parent(tree, niece);
+        } else {
+            sibling->color = COLOR_RED;
+            leaf = leaf->parent;
+        }
+    }
+
+    leaf->color = COLOR_BLACK;
+}
+
+void *rb_tree_remove(rb_tree_t tree_, void *toremove) {
+    struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
+
+    // 1. Run regular bst removal algorithm, which moves toremove to a leaf node
+    rb_node_t *leaf = rb_tree_remove_impl(tree->root, tree, toremove);
+    if (!leaf) {
+        return NULL;
+    }
+
+    void *result = leaf->data;
+
+    // 2. Fix red-black violations
+    recolor_after_remove(tree, leaf);
+
+    // 3. Prune the leaf
+    prune_leaf(tree, leaf);
+
+    return result;
 }
 
 // Global variable to keep track of current index for dumping
@@ -294,7 +471,7 @@ static inline rb_tree_valid_t valid_inits(size_t blacks, int valid) {
 }
 
 // https://cs.kangwon.ac.kr/~leeck/file_processing/red_black_tree.pdf
-static rb_tree_valid_t validate_subtree(rb_node_t *root) {
+static rb_tree_valid_t validate_subtree_rb(rb_node_t *root) {
     // Check Rule@3
     if (!root) {
         return valid_inits(1, 1);
@@ -308,8 +485,8 @@ static rb_tree_valid_t validate_subtree(rb_node_t *root) {
 
     // Check Rule@5
 
-    rb_tree_valid_t right = validate_subtree(root->right);
-    rb_tree_valid_t left = validate_subtree(root->left);
+    rb_tree_valid_t right = validate_subtree_rb(root->right);
+    rb_tree_valid_t left = validate_subtree_rb(root->left);
 
     if (!right.valid || !left.valid || (right.blacks != left.blacks)) {
         return valid_inits(0, 0);
@@ -333,7 +510,7 @@ int rb_tree_is_valid(rb_tree_t tree_) {
         return 0;
     }
 
-    rb_tree_valid_t valid = validate_subtree(tree->root);
+    rb_tree_valid_t valid = validate_subtree_rb(tree->root);
 
     return valid.valid;
 }
