@@ -54,8 +54,12 @@ size_t lfuda_get_next_key(lfuda_t cache_, local_node_data_t local_data) {
 
 //============================================================================================================
 
-freq_node_t lfuda_get_next_freq(freq_node_t *freq_node, size_t new_key) {
-    // TODO: ajlekcahdp4 - implement
+freq_node_t lfuda_get_next_freq(lfuda_t cache_, size_t new_key) {
+    struct lfuda_s *lfuda = (struct lfuda_s *)cache_;
+    freq_node_t test_freq = freq_node_init(new_key);
+    freq_node_t freq = rb_tree_lookup(lfuda->rbtree, test_freq);
+    free(test_freq); // not so good free, needs to be replaced
+    return freq;
 }
 
 //============================================================================================================
@@ -105,13 +109,21 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         // with another key (not just incremented)
         dl_list_remove(freq_node_get_local(root_node), found->local);
 
-        size_t new_key = lfuda_get_next_key(lfuda, local_data);         // NOT IMPLEMENTED YET
-        freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key); // NOT IMPLEMENTED YET
+        // remove root node from red-black tree if local list now is empty
+        if (dl_list_is_empty(freq_node_get_local(root_node))) {
+            rb_tree_remove(lfuda->rbtree, root_node);
+        }
+
+        // find if there are local list with new_key
+        size_t new_key = lfuda_get_next_key(lfuda, local_data);
+        freq_node_t new_freq = lfuda_get_next_freq(root_node, new_key);
 
         if (new_freq) {
             dl_list_push_front(freq_node_get_local(new_freq), found->local);
         } else {
+            // create new node and insert it in red-black tree
             new_freq = freq_node_init(new_key);
+            rb_tree_insert(lfuda->rbtree, new_freq);
             dl_list_insert_after(basecache->freq_list, root_node, new_freq);
             dl_list_push_front(freq_node_get_local(new_freq), found->local);
         }
@@ -138,7 +150,9 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
         // check if first_freq exist and key of first freq is equal to intial freq
         if (!first_freq || freq_node_get_key(first_freq) != LFUDA_INITIAL_FREQ) {
+            // create new freq node and insert it in a red-black tree
             first_freq = freq_node_init(LFUDA_INITIAL_FREQ);
+            rb_tree_insert(lfuda->rbtree, first_freq);
             dl_list_push_front(basecache->freq_list, first_freq);
         }
 
