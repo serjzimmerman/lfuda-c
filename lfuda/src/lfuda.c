@@ -10,14 +10,25 @@
 #include "lfuda.h"
 #include "basecache.h"
 #include "clist.h"
+#include "rbtree.h"
 
 #include "memutil.h"
 #include <assert.h>
 
 struct lfuda_s {
     base_cache_t base;
+    rb_tree_t rbtree;
     size_t age;
 };
+
+//============================================================================================================
+
+// compare 2 freq nodes by checking keys
+int freq_node_cmp(freq_node_t node1_, freq_node_t node2_) {
+    size_t key1 = freq_node_get_key(node1_);
+    size_t key2 = freq_node_get_key(node2_);
+    return (int)key1 - (int)key2;
+}
 
 //============================================================================================================
 
@@ -52,6 +63,7 @@ freq_node_t lfuda_get_next_freq(freq_node_t *freq_node, size_t new_key) {
 lfuda_t lfuda_init(cache_init_t init) {
     struct lfuda_s *lfuda = calloc_checked(1, sizeof(struct lfuda_s));
     base_cache_init(&lfuda->base, init);
+    lfuda->rbtree = rb_tree_init(freq_node_cmp);
     return lfuda;
 }
 
