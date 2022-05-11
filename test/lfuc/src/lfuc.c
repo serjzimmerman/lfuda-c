@@ -33,9 +33,9 @@ int main() {
     cache_init_t init = {
         .hash = index_hash,
         .cmp = index_cmp,
-        .get = NULL,
+        .get = get_page,
         .size = m,
-        .data_size = 0,
+        .data_size = sizeof(index_t),
     };
 
     lfu_t lfu = lfu_init(init);

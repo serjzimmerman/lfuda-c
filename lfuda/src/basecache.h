@@ -38,7 +38,7 @@ void base_cache_free(base_cache_t *cache);
 local_node_t base_cache_lookup(base_cache_t *cache, void **index);
 
 // Removes local node from cache and returns it
-local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void *index);
+local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void **index);
 
 // Inserts toinsert at freqnode (at head)
 void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index);

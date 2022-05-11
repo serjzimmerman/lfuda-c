@@ -64,20 +64,28 @@ local_node_t base_cache_lookup(base_cache_t *cache, void **index) {
     entry_t *found = hashtab_lookup(cache->table, index);
 
     local_node_t *result = (found ? found->local : NULL);
-    free(found);
 
     return result;
 }
 
-local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void *index) {
+local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void **index) {
     assert(cache);
     assert(node);
 
     // Index should correspond to the local node
-    hashtab_remove(cache->table, index);
+    free(hashtab_remove(cache->table, index));
 
-    local_list_t freq_node = local_node_get_freq_node(node);
-    return dl_list_remove(freq_node_get_local(freq_node), node);
+    freq_node_t freq_node = local_node_get_freq_node(node);
+    local_list_t local_list = freq_node_get_local(freq_node);
+    local_node_t result = dl_list_remove(local_list, node);
+
+    // If list becomes empty, then free it and remove it
+    if (dl_list_is_empty(local_list)) {
+        dl_list_free(local_list, NULL);
+        dl_list_remove(cache->freq_list, freq_node);
+    }
+
+    return result;
 }
 
 void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index) {
