@@ -1,5 +1,6 @@
 #include "rbtree.h"
 
+#include <limits.h>
 #include <stdio.h>
 
 #include "error.h"
@@ -332,7 +333,7 @@ static rb_node_t *rb_tree_lookup_impl(rb_node_t *root, void *key, rb_cmp_func_t 
     return root;
 }
 
-void *rb_tree_lookup(rb_tree_t tree_, void *key) {
+const void *rb_tree_lookup(rb_tree_t tree_, void *key) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
     assert(tree);
@@ -566,4 +567,74 @@ int rb_tree_is_valid(rb_tree_t tree_) {
     rb_tree_valid_t valid = validate_subtree_rb(tree->root);
 
     return valid.valid;
+}
+
+static inline int iabs(const int value) {
+    return (value > 0 ? value : -value);
+}
+
+const void *rb_tree_closest_left_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
+    assert(root);
+    assert(key);
+
+    void *closest_data = NULL;
+    int closest_diff = INT_MAX;
+
+    while (root) {
+        int current_diff = cmp(root->data, key);
+        if (current_diff <= 0) {
+            if (iabs(current_diff) < closest_diff) {
+                closest_diff = iabs(current_diff);
+                closest_data = root->data;
+            }
+            root = root->right;
+        } else if (current_diff > 0) {
+            root = root->left;
+        } else {
+            break;
+        }
+    }
+
+    return closest_data;
+}
+
+const void *rb_tree_closest_left(rb_tree_t tree_, void *key) {
+    struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
+
+    assert(tree);
+
+    return rb_tree_closest_left_impl(tree->root, key, tree->cmp);
+}
+
+const void *rb_tree_closest_right_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
+    assert(root);
+    assert(key);
+
+    void *closest_data = NULL;
+    int closest_diff = INT_MAX;
+
+    while (root) {
+        int current_diff = cmp(root->data, key);
+        if (current_diff < 0) {
+            root = root->right;
+        } else if (current_diff >= 0) {
+            if (iabs(current_diff) < closest_diff) {
+                closest_diff = iabs(current_diff);
+                closest_data = root->data;
+            }
+            root = root->left;
+        } else {
+            break;
+        }
+    }
+
+    return closest_data;
+}
+
+const void *rb_tree_closest_right(rb_tree_t tree_, void *key) {
+    struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
+
+    assert(tree);
+
+    return rb_tree_closest_right_impl(tree->root, key, tree->cmp);
 }

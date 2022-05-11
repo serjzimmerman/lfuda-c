@@ -10,6 +10,7 @@ extern "C" {
 
 typedef void *rb_tree_t;
 
+// This is a distance function used for comparing elements and finding closest values
 typedef int (*rb_cmp_func_t)(const void *, const void *);
 typedef const char *(rb_stringify_func_t)(const void *);
 
@@ -22,7 +23,7 @@ rb_tree_t rb_tree_init(rb_cmp_func_t cmp);
 void rb_tree_free(rb_tree_t tree_, rb_free_func_t data_free);
 
 // Lookup an element in the tree, return pointer to data if found, else return NULL
-void *rb_tree_lookup(rb_tree_t tree_, void *key);
+const void *rb_tree_lookup(rb_tree_t tree_, void *key);
 
 // Remove key from the tree if it is present and return data, else return NULL
 void *rb_tree_remove(rb_tree_t tree_, void *toremove);
@@ -35,6 +36,12 @@ void rb_tree_dump(rb_tree_t tree_, FILE *fp, rb_stringify_func_t stringify);
 
 // Check whether the tree is a valid Red-Black tree
 int rb_tree_is_valid(rb_tree_t tree_);
+
+// Get element closest to key from the right
+const void *rb_tree_closest_left(rb_tree_t tree_, void *key);
+
+// Get element closest to key from the left
+const void *rb_tree_closest_right(rb_tree_t tree_, void *key);
 
 #ifdef __cplusplus
 }

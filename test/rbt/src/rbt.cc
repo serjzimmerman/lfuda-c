@@ -93,6 +93,40 @@ TEST(TestRBTree, Test2) {
     EXPECT_RB_TREE_VALID(tree);
 }
 
+TEST(TestRBTree, Test3) {
+    RBTree<int> tree{};
+
+    for (int i = 0; i < 128; ++i) {
+        tree.Insert(i);
+    }
+
+    int test_close{16}, closest{};
+
+    EXPECT_RB_TREE_VALID(tree);
+
+    EXPECT_EQ(*static_cast<const int *>(rb_tree_closest_right(tree, &test_close)), 16);
+    EXPECT_EQ(*static_cast<const int *>(rb_tree_closest_right(tree, &test_close)), 16);
+
+    tree.Remove(16);
+
+    EXPECT_EQ(*static_cast<const int *>(rb_tree_closest_left(tree, &test_close)), 15);
+    EXPECT_EQ(*static_cast<const int *>(rb_tree_closest_right(tree, &test_close)), 17);
+
+    EXPECT_RB_TREE_VALID(tree);
+}
+
+TEST(TestRBTree, Test4) {
+    RBTree<int> tree{};
+
+    tree.Insert(1);
+    int lookup = 1;
+    EXPECT_TRUE(rb_tree_lookup(tree, &lookup) != nullptr);
+
+    tree.Remove(1);
+
+    EXPECT_TRUE(rb_tree_lookup(tree, &lookup) == nullptr);
+}
+
 // Run all tests
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
