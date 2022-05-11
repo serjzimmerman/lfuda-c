@@ -7,54 +7,92 @@
 #include "memutil.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
     assert(cache);
 
-    assert(init.get);
+    // All this should not be either NULL or 0
     assert(init.cmp);
     assert(init.hash);
     assert(init.size);
-    assert(init.data_size);
+
+    // Either there should be a get function and non-zero data_size, or all must be NULL
+    assert((!init.get && !init.data_size) || (init.get && init.data_size));
 
     cache->size = init.size;
     cache->data_size = init.data_size;
     cache->hits = 0;
     cache->slow_get = init.get;
+    cache->cached_data = NULL;
 
-    cache->table = hashtab_init(init.data_size * 2, init.hash, init.cmp, init.free);
+    cache->table = hashtab_init(init.size * 2, init.hash, init.cmp, free);
     // Disable resize, because this would be bad for perfomance and totally redundant
     hashtab_set_enabled_resize(cache->table, 0);
 
     cache->freq_list = dl_list_init();
-    cache->cached_data = calloc_checked(init.size, init.data_size);
+
+    // If data_size == 0, then no data will get copied
+    if (init.data_size) {
+        cache->cached_data = calloc_checked(init.size, init.data_size);
+    }
 
     return cache;
 }
 
-local_node_t base_cache_lookup(base_cache_t *cache, void *index) {
-    assert(cache);
-    assert(cache->table);
-    assert(cache->hash);
+// Data type that is stored in the hash table
+typedef struct {
+    void *index;
+    local_node_t local;
+} entry_t;
 
-    dl_node_t check_node = hashtab_lookup(cache->table, index);
+entry_t *entry_init(void *index, local_node_t local) {
+    entry_t *entry = calloc_checked(1, sizeof(entry_t));
+    assert(index);
 
-    return dl_node_get_data(check_node);
+    entry->index = index;
+    entry->local = local;
+
+    return entry;
 }
 
-local_node_t base_cache_remove(base_cache_t *cache, local_node_t node) {
+local_node_t base_cache_lookup(base_cache_t *cache, void **index) {
     assert(cache);
-    assert(cache->table);
-    assert(cache->hash);
-    hashtab_remove(cache->table, local_node_get_fam(node).cached);
-    // Rebounding of knots
-    local_list_t frec_node = local_node_get_fam(node).cached;
-    return dl_list_remove(frec_node, node);
+    assert(index);
+
+    entry_t *found = hashtab_lookup(cache->table, index);
+
+    local_node_t *result = (found ? found->local : NULL);
+    free(found);
+
+    return result;
 }
 
-// Inserting in front due to more comfortable replacemnt for LFU policy
-void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert) {
+local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void *index) {
     assert(cache);
-    dl_list_push_back(freqnode, toinsert);
+    assert(node);
+
+    // Index should correspond to the local node
+    hashtab_remove(cache->table, index);
+
+    local_list_t freq_node = local_node_get_freq_node(node);
+    return dl_list_remove(freq_node_get_local(freq_node), node);
+}
+
+void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index) {
+    assert(cache);
+    assert(freqnode);
+    assert(toinsert);
+
+    // 1. Set the root of toinsert to freqnode
+    local_node_set_freq_node(toinsert, freqnode);
+
+    // 2. Insert the node the the local list
+    dl_list_push_front(freq_node_get_local(freqnode), toinsert);
+
+    // 3. Create an entry and insert it into the hash table
+    entry_t *entry = entry_init(index, toinsert);
+
+    hashtab_insert(&cache->table, entry);
 }

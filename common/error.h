@@ -4,9 +4,11 @@
 #ifdef __cplusplus
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
 #else
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #define UNUSED_PARAMETER(expr) (void)(expr);
