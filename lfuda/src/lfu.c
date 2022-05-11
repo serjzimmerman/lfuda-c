@@ -71,13 +71,23 @@ void *lfu_get(lfu_t cache_, void *index) {
         cache->hits++;
         // Get frequency and root node of freq_node_t
         local_node_data_t local_data = local_node_get_fam(found);
-        freq_node_t root_node = dl_node_get_data(found);
+        freq_node_t root_node = local_node_get_freq_node(found);
 
         local_data.frequency++;
         // Remove node from this list and move to the freq node with incremented key
-        dl_list_remove(freq_node_get_local(root_node), found);
+        local_list_t local_list = freq_node_get_local(root_node);
+
+        // Bug[Sergei]:
+        // For whatever reason there is a SEGFAULT here, please fix(future me)
+        dl_list_remove(local_list, found);
 
         freq_node_t next_freq = next_freq_node_init(cache->freq_list, root_node);
+        local_node_set_freq_node(found, next_freq);
+
+        if (dl_list_is_empty(local_list)) {
+            dl_list_free(local_list, NULL);
+            dl_list_remove(cache->freq_list, root_node);
+        }
 
         dl_list_push_front(freq_node_get_local(next_freq), found);
 
@@ -99,7 +109,7 @@ void *lfu_get(lfu_t cache_, void *index) {
 
     // 2.1 In this case cache is not full and we can just insert the node with frequency 1.
     if (cache->curr_top < cache->size) {
-        curr_data_ptr = (cache->cached_data + cache->data_size * cache->curr_top);
+        curr_data_ptr = (cache->cached_data + cache->data_size * cache->curr_top++);
 
         freq_node_t first_freq = next_freq_node_init(cache->freq_list, NULL);
         if (cache->data_size) {
@@ -121,7 +131,7 @@ void *lfu_get(lfu_t cache_, void *index) {
 
         curr_data_ptr = local_data.cached;
 
-        base_cache_remove(cache, toevict, index);
+        base_cache_remove(cache, toevict, &index);
 
         first_freq = next_freq_node_init(cache->freq_list, NULL);
 
