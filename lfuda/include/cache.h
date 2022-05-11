@@ -11,10 +11,6 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-struct base_cache_s;
-typedef struct base_cache_s base_cache_t;
-
-typedef size_t (*cache_get_priority_func_t)(size_t freq, base_cache_t *cache);
 typedef void *(*cache_get_page_t)(void *index);
 
 // Initializer struct for cache

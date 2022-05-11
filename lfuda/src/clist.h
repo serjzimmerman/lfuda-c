@@ -79,4 +79,14 @@ static inline void local_node_set_fam(local_node_t node_, local_node_data_t fam_
     memcpy(fam, &fam_, sizeof(local_node_data_t));
 }
 
+static inline freq_node_t local_node_get_freq_node(local_node_t node_) {
+    assert(node_);
+    return dl_node_get_data(node_);
+}
+
+static inline void local_node_set_freq_node(local_node_t node_, freq_node_t freqnode) {
+    assert(node_);
+    return dl_node_set_data(node_, freqnode);
+}
+
 #endif

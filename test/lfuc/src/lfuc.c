@@ -23,17 +23,28 @@ void *get_page(index_t *index) {
 }
 
 int main() {
+    size_t m = 0, n = 0;
+
+    int res = scanf("%lu %lu", &m, &n);
+    if (!res) {
+        ERROR("Invalid input\n");
+    }
+
     cache_init_t init = {
         .hash = index_hash,
         .cmp = index_cmp,
-        .get = get_page,
-        .size = 128,
-        .data_size = sizeof(int),
+        .get = NULL,
+        .size = m,
+        .data_size = 0,
     };
+
     lfu_t lfu = lfu_init(init);
 
-    index_t page1 = {.value = 1};
-    printf("%d", *(int *)lfu_get(lfu, &page1));
+    for (int i = 0; i < n; ++i) {
+        index_t index;
+        scanf("%d", &index.value);
+        lfu_get(lfu, &index.value);
+    }
 
-    printf("%d", *(int *)lfu_get(lfu, &page1));
+    printf("%lu", lfu_get_hits(lfu));
 }
