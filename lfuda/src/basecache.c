@@ -41,12 +41,6 @@ base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
     return cache;
 }
 
-// Data type that is stored in the hash table
-typedef struct {
-    void *index;
-    local_node_t local;
-} entry_t;
-
 entry_t *entry_init(void *index, local_node_t local) {
     entry_t *entry = calloc_checked(1, sizeof(entry_t));
     assert(index);
@@ -68,27 +62,25 @@ local_node_t base_cache_lookup(base_cache_t *cache, void **index) {
     return result;
 }
 
-local_node_t base_cache_remove(base_cache_t *cache, local_node_t node, void **index) {
+entry_t *base_cache_remove(base_cache_t *cache, local_node_t node, void **index) {
     assert(cache);
     assert(node);
 
     // Index should correspond to the local node
-    free(hashtab_remove(cache->table, index));
+    entry_t *free_entry = hashtab_remove(cache->table, index);
 
     freq_node_t freq_node = local_node_get_freq_node(node);
     local_list_t local_list = freq_node_get_local(freq_node);
-    local_node_t result = dl_list_remove(local_list, node);
+    dl_list_remove(local_list, node);
 
     // If list becomes empty, then free it and remove it
-    if (dl_list_is_empty(local_list)) {
-        dl_list_free(local_list, NULL);
-        dl_list_remove(cache->freq_list, freq_node);
-    }
+    base_cache_remove_freq_if_empty(cache, freq_node);
 
-    return result;
+    return free_entry;
 }
 
-void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index) {
+void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index,
+                       entry_t *free_entry) {
     assert(cache);
     assert(freqnode);
     assert(toinsert);
@@ -100,7 +92,27 @@ void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t t
     dl_list_push_front(freq_node_get_local(freqnode), toinsert);
 
     // 3. Create an entry and insert it into the hash table
-    entry_t *entry = entry_init(index, toinsert);
+    entry_t *entry;
+    if (!free_entry) {
+        entry = entry_init(index, toinsert);
+    } else {
+        entry = free_entry;
+        entry->index = index;
+        entry->local = toinsert;
+    }
 
     hashtab_insert(&cache->table, entry);
+}
+
+void base_cache_free(base_cache_t *cache) {
+    assert(cache);
+
+    // 1. Free the hashtable
+    hashtab_free(cache->table);
+
+    // 2. Free all lists
+    freq_list_free(cache->freq_list);
+
+    // 3. If there was any space allocated to the cached data, we free it
+    free(cache->cached_data);
 }

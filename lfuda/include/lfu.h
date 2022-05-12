@@ -18,7 +18,7 @@ typedef void *lfu_t;
 lfu_t lfu_init(cache_init_t init);
 
 // Free cache
-void lfu_free(lfu_t);
+void lfu_free(lfu_t cache_);
 
 // Get data from either cache or slow_get function with index, for which appropritate function have been provided by the
 // user
