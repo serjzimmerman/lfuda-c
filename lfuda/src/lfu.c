@@ -22,12 +22,6 @@ lfu_t lfu_init(cache_init_t init) {
     return lfu;
 }
 
-void lfu_free(lfu_t cache) {
-    struct lfu_s *lfu = (struct lfu_s *)cache;
-
-    // TODO[Sergei]: Plug memory leaks
-}
-
 // Get next freq node and create one if there is no immediate successor. If freqnode is NULL, then return frequency node
 // with key 1, or create one if there are none
 static freq_node_t next_freq_node_init(freq_list_t list, freq_node_t freqnode) {
@@ -69,29 +63,24 @@ void *lfu_get(lfu_t cache_, void *index) {
     if (found) {
         // Increment hits counter
         cache->hits++;
+
         // Get frequency and root node of freq_node_t
         local_node_data_t local_data = local_node_get_fam(found);
         freq_node_t root_node = local_node_get_freq_node(found);
-
         local_data.frequency++;
+
         // Remove node from this list and move to the freq node with incremented key
         local_list_t local_list = freq_node_get_local(root_node);
-
-        // Bug[Sergei]:
-        // For whatever reason there is a SEGFAULT here, please fix(future me)
         dl_list_remove(local_list, found);
-
         freq_node_t next_freq = next_freq_node_init(cache->freq_list, root_node);
         local_node_set_freq_node(found, next_freq);
 
-        if (dl_list_is_empty(local_list)) {
-            dl_list_free(local_list, NULL);
-            dl_list_remove(cache->freq_list, root_node);
-        }
+        // If frequency node is empty, then remove it
+        base_cache_remove_freq_if_empty(cache, root_node);
 
         dl_list_push_front(freq_node_get_local(next_freq), found);
-
         local_node_set_fam(found, local_data);
+
         return local_node_get_fam(found).cached;
     }
 
@@ -118,8 +107,7 @@ void *lfu_get(lfu_t cache_, void *index) {
         }
 
         toinsert = local_node_init(first_freq, local_data);
-
-        base_cache_insert(cache, first_freq, toinsert, index);
+        base_cache_insert(cache, first_freq, toinsert, index, NULL);
     }
 
     // In this case the cache is full and we decide which entry to invalidate and evict based on LFU strategy
@@ -129,15 +117,15 @@ void *lfu_get(lfu_t cache_, void *index) {
 
         local_node_data_t evicted_data = local_node_get_fam(toevict);
         local_data.cached = evicted_data.cached;
-
         curr_data_ptr = local_data.cached;
 
-        base_cache_remove(cache, toevict, &evicted_data.index);
+        entry_t *free_entry = base_cache_remove(cache, toevict, &evicted_data.index);
 
         first_freq = next_freq_node_init(cache->freq_list, NULL);
-
         toinsert = local_node_init(first_freq, local_data);
-        base_cache_insert(cache, first_freq, toinsert, index);
+        local_node_free(toevict);
+
+        base_cache_insert(cache, first_freq, toinsert, index, free_entry);
     }
 
     if (cache->data_size) {
@@ -153,4 +141,12 @@ size_t lfu_get_hits(lfu_t cache_) {
     assert(cache);
 
     return cache->hits;
+}
+
+void lfu_free(lfu_t cache_) {
+    base_cache_t *cache = (base_cache_t *)cache_;
+
+    base_cache_free(cache);
+
+    free(cache);
 }

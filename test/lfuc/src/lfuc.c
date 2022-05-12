@@ -48,5 +48,8 @@ int main() {
         lfu_get(lfu, index);
     }
 
-    printf("%lu", lfu_get_hits(lfu));
+    printf("%lu\n", lfu_get_hits(lfu));
+
+    lfu_free(lfu);
+    free(array);
 }
