@@ -24,6 +24,7 @@ typedef dl_node_t local_node_t;
 typedef struct {
     size_t frequency;
     void *cached;
+    void *index;
 } local_node_data_t;
 
 // Utility functions for working with frequency and local lists
