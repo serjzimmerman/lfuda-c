@@ -103,9 +103,10 @@ void *lfu_get(lfu_t cache_, void *index) {
     char *curr_data_ptr = NULL;
 
     // Initialize local_data with corrent info
-    local_node_data_t local_data;
+    local_node_data_t local_data = {};
     // local_data.cached = curr_data_ptr;
     local_data.frequency = 1;
+    local_data.index = index;
 
     // 2.1 In this case cache is not full and we can just insert the node with frequency 1.
     if (cache->curr_top < cache->size) {
@@ -131,7 +132,7 @@ void *lfu_get(lfu_t cache_, void *index) {
 
         curr_data_ptr = local_data.cached;
 
-        base_cache_remove(cache, toevict, &index);
+        base_cache_remove(cache, toevict, &evicted_data.index);
 
         first_freq = next_freq_node_init(cache->freq_list, NULL);
 
