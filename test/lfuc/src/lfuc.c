@@ -4,6 +4,7 @@
 #include "error.h"
 
 #include "lfu.h"
+#include "memutil.h"
 
 typedef struct {
     int value;
@@ -40,10 +41,11 @@ int main() {
 
     lfu_t lfu = lfu_init(init);
 
+    index_t *array = calloc_checked(n, sizeof(index_t));
     for (int i = 0; i < n; ++i) {
-        index_t index;
-        scanf("%d", &index.value);
-        lfu_get(lfu, &index.value);
+        index_t *index = &array[i];
+        scanf("%d", index);
+        lfu_get(lfu, index);
     }
 
     printf("%lu", lfu_get_hits(lfu));
