@@ -67,8 +67,16 @@ freq_node_t lfuda_next_freq_node_init(lfuda_t cache_, local_node_t localnode) {
         dl_node_free(testnewfreq, NULL);
         return newfreq;
     }
-    dl_list_push_front(basecache->freq_list, testnewfreq); // insert testnewfreq in freq list
-    rb_tree_insert(lfuda->rbtree, testnewfreq);            // insert testnewfreq in red black tree
+
+    // insert testnewfreq in red black tree
+    rb_tree_insert(lfuda->rbtree, testnewfreq);
+    // insert testnewfreq in freq list
+    freq_node_t insertafter = rb_tree_closest_left(lfuda->rbtree, testnewfreq);
+    if (insertafter != testnewfreq) {
+        dl_list_insert_after(basecache->freq_list, insertafter, testnewfreq);
+    } else {
+        dl_list_push_front(basecache->freq_list, testnewfreq);
+    }
 
     return testnewfreq;
 }
@@ -79,6 +87,7 @@ lfuda_t lfuda_init(cache_init_t init) {
     struct lfuda_s *lfuda = calloc_checked(1, sizeof(struct lfuda_s));
     base_cache_init(&lfuda->base, init);
     lfuda->rbtree = rb_tree_init(freq_node_cmp);
+    lfuda->age = 1;
     return lfuda;
 }
 
@@ -114,9 +123,10 @@ freq_node_t lfuda_new_freq_node_init(lfuda_t cache_) {
     // check if first_freq exist and key of first freq is equal to intial freq
     if (!first_freq || freq_node_get_key(first_freq) != LFUDA_INITIAL_FREQ) {
         // create new freq node and insert it in a red-black tree
-        first_freq = freq_node_init(LFUDA_INITIAL_FREQ);
-        rb_tree_insert(lfuda->rbtree, first_freq);
-        dl_list_push_front(basecache->freq_list, first_freq);
+        freq_node_t new_freq = freq_node_init(LFUDA_INITIAL_FREQ);
+        rb_tree_insert(lfuda->rbtree, new_freq);
+        dl_list_push_front(basecache->freq_list, new_freq);
+        return new_freq;
     }
     return first_freq;
 }
@@ -140,7 +150,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
         // Get data and root node of local node
         local_node_data_t local_data = local_node_get_fam(found);
-        freq_node_t root_node = dl_node_get_data(found);
+        freq_node_t root_node = local_node_get_freq_node(found);
 
         // Increment frequency of the found cache entry
         local_data.frequency += 1;
@@ -159,6 +169,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
         // Find next freq node(or create it)
         freq_node_t next_freq = lfuda_next_freq_node_init(cache_, found);
+        dl_list_push_front(freq_node_get_local(next_freq), found);
         // Insert a pointer to next_freq node into the found node
         local_node_set_freq_node(found, next_freq);
         // Set updated information of the local node into it
@@ -178,7 +189,6 @@ void *lfuda_get(lfuda_t cache_, void *index) {
     local_node_data_t local_data = {};
     local_data.frequency = LFUDA_INITIAL_FREQ;
     local_data.index = index;
-    local_data.cached = page;
 
     // 2. In this case cache is not full and we can just insert the node with initial frequency
     if (basecache->curr_top < basecache->size) {
@@ -206,6 +216,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         local_node_t toevict = dl_list_get_last(freq_node_get_local(first_freq));
 
         local_node_data_t evicted_data = local_node_get_fam(toevict);
+        lfuda->age = evicted_data.frequency;
         local_data.cached = evicted_data.cached;
         curr_data_ptr = local_data.cached;
 
