@@ -1,4 +1,5 @@
 add_subdirectory(lfuc)
+add_subdirectory(lfudac)
 
 add_subdirectory(hshtend)
 # If there is Google Test available, then add test targets
