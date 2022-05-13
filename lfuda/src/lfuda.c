@@ -86,8 +86,14 @@ lfuda_t lfuda_init(cache_init_t init) {
 
 void lfuda_free(lfuda_t cache_) {
     struct lfuda_s *lfuda = (struct lfuda_s *)cache_;
-    hashtab_free(lfuda->base.table);
-    /* TODO: ajlekcahdp4 - add free of cache list, red black tree, etc.*/
+    // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfuda_s struct
+    struct base_cache_s *basecache = (struct base_cache_s *)cache_;
+
+    base_cache_free(basecache);
+
+    rb_tree_free(lfuda->rbtree, NULL);
+
+    free(lfuda);
 }
 
 //============================================================================================================
