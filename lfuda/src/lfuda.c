@@ -187,7 +187,7 @@ void *lfuda_get(lfuda_t cache_, void *index) {
         }
 
         toinsert = local_node_init(first_freq, local_data);
-        base_cache_insert(basecache, first_freq, toinsert, index);
+        base_cache_insert(basecache, first_freq, toinsert, index, NULL);
     }
     // 3. In this case the cache is already full and we need to evict some entry from
     // cache according to the LFU-DA policy
@@ -201,13 +201,14 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
         local_node_data_t evicted_data = local_node_get_fam(toevict);
         local_data.cached = evicted_data.cached;
+        curr_data_ptr = local_data.cached;
 
-        base_cache_remove(basecache, toevict, &evicted_data.index);
+        entry_t *free_entry = base_cache_remove(basecache, toevict, &evicted_data.index);
 
         first_freq = lfuda_new_freq_node_init(cache_);
 
         toinsert = local_node_init(first_freq, local_data);
-        base_cache_insert(basecache, first_freq, toinsert, index);
+        base_cache_insert(basecache, first_freq, toinsert, index, free_entry);
     }
     if (basecache->data_size) {
         memcpy(curr_data_ptr, page, basecache->data_size);
