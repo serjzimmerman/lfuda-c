@@ -23,6 +23,9 @@ void lfuda_free(lfuda_t lfuda);
 // get page by index
 void *lfuda_get(lfuda_t cache_, void *index);
 
+// Get current hits in lfuda
+size_t lfuda_get_hits(lfuda_t cache_);
+
 #ifdef __cplusplus
 }
 #endif
