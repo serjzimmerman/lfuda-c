@@ -1,12 +1,7 @@
 #ifndef DUMP_CACHE_H
 #define DUMP_CACHE_H
 
-#include "basecache.h"
 #include "clist.h"
-#include "dllist.h"
-#include "hashtab.h"
-
-#include "memutil.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
