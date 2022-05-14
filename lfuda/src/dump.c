@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-void dump_freq_links(freq_list_t freqlist, FILE *file) {
+static void dump_freq_links(freq_list_t freqlist, FILE *file) {
     assert(freqlist);
 
     fprintf(file, "\tsubgraph FREQ_LIST\n");
@@ -19,29 +19,32 @@ void dump_freq_links(freq_list_t freqlist, FILE *file) {
         fprintf(file, "\t\tfreq_%p;\n", current_freq_node);
         current_freq_node = dl_node_get_next(current_freq_node);
     }
+
     fprintf(file, "\n");
+    fprintf(file, "\t\tfreq_tail -> ");
     current_freq_node = dl_list_get_first(freqlist);
-    fprintf(file, "\t\tfreq_%p", current_freq_node);
+    fprintf(file, "freq_%p", current_freq_node);
     current_freq_node = dl_node_get_next(current_freq_node);
+
     while (current_freq_node) {
-        fprintf(file, " -> freq_%p");
+        fprintf(file, " -> freq_%p", current_freq_node);
         current_freq_node = dl_node_get_next(current_freq_node);
     }
+    fprintf(file, "\n");
     fprintf(file, "\t}\n");
 }
 
-void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump) {
+static void dump_freq_node_list(freq_node_t freqnode, output_t format_dump) {
     assert(freqnode);
-    assert(format_dump);
-    assert(format_dump->file);
-    assert(format_dump->print);
+    assert(format_dump.file);
+    assert(format_dump.print);
 
-    FILE *file = format_dump->file;
+    FILE *file = format_dump.file;
 
     fprintf(file, "\tsubgraph FREQ_%p\n", freqnode);
     fprintf(file, "\t{\n");
     fprintf(file, "\t\trankdir = TB;\n\n");
-    fprintf(file, "\t\tfreq_%p [label = \"%u\", fillcolor = \"deepskyblue\", fontcolor = \"white\"];\n\n", freqnode,
+    fprintf(file, "\t\tfreq_%p [label = \"%lu\", fillcolor = \"deepskyblue\", fontcolor = \"white\"];\n", freqnode,
             freq_node_get_key(freqnode));
 
     local_list_t local_list = freq_node_get_local(freqnode);
@@ -50,27 +53,29 @@ void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump) {
     while (current_local_node) {
         fprintf(file, "\t\tlocal_node_%p [label = \"", current_local_node);
         local_node_data_t current_local_node_data = local_node_get_fam(current_local_node);
-        (format_dump->print)(current_local_node_data.index, file);
+        (format_dump.print)(current_local_node_data.index, file);
         fprintf(file, "\"];\n");
         current_local_node = dl_node_get_next(current_local_node);
     }
+
     fprintf(file, "\n");
     fprintf(file, "\t\tfreq_%p", freqnode);
+
     current_local_node = dl_list_get_first(local_list);
     while (current_local_node) {
         fprintf(file, " -> local_node_%p", current_local_node);
         current_local_node = dl_node_get_next(current_local_node);
     }
+
     fprintf(file, "\n");
     fprintf(file, "\t}\n");
 }
 
-void dump_cache(void *cache_, output_t *format_dump) {
+void dump_cache(void *cache_, output_t format_dump) {
     assert(cache_);
-    assert(format_dump);
-    assert(format_dump->file);
+    assert(format_dump.file);
 
-    FILE *file = format_dump->file;
+    FILE *file = format_dump.file;
     base_cache_t *cache = (struct base_cache_s *)cache_;
     freq_list_t freqlist = cache->freq_list;
     freq_node_t current_freq_node = dl_list_get_first(freqlist);
@@ -80,7 +85,8 @@ void dump_cache(void *cache_, output_t *format_dump) {
     fprintf(file, "{\n");
     fprintf(file, "\tgraph [dpi = 200, nodesep = 1];\n");
     fprintf(file, "\trankdir = TB;\n");
-    fprintf(file, "\tsplines = ortho\n", "edge [maxlen = 2, dir = \"both\", shape = \"normal\"];\n");
+    fprintf(file, "\tsplines = ortho;\n");
+    fprintf(file, "\tedge [maxlen = 2, dir = \"both\", shape = \"normal\"];\n");
     fprintf(file, "\tnode [shape = box, style = \"filled\", fillcolor = \"gold\", fontcolor = \"black\"];\n\n");
     fprintf(file, "\tfreq_tail [label = \"WEIGHT\", fillcolor = \"deepskyblue\", fontcolor =\"white\"];\n\n");
 
@@ -90,7 +96,7 @@ void dump_cache(void *cache_, output_t *format_dump) {
         current_freq_node = dl_node_get_next(current_freq_node);
     }
 
-    dump_freq_links(freqlist, format_dump->file);
+    dump_freq_links(freqlist, format_dump.file);
 
     fprintf(file, "}\n");
 }
