@@ -3,6 +3,7 @@
 #include "dllist.h"
 #include "error.h"
 
+#include "dump.h"
 #include "lfu.h"
 #include "memutil.h"
 
@@ -21,6 +22,10 @@ int index_cmp(index_t **a, index_t **b) {
 void *get_page(index_t *index) {
     static int a = 5;
     return &a;
+}
+
+void print_elem(void *index, FILE *file) {
+    fprintf(file, "%d", *((int *)index));
 }
 
 int main() {
@@ -48,6 +53,13 @@ int main() {
         lfu_get(lfu, index);
     }
 
+    output_s output = {};
+    output.file = fopen("dump.dot", "w");
+    assert(output.file);
+    output.print = print_elem;
+
+    dump_cache(lfu, &output);
+    fclose(output.file);
     printf("%lu\n", lfu_get_hits(lfu));
 
     lfu_free(lfu);
