@@ -3,6 +3,7 @@
 #include "dllist.h"
 #include "error.h"
 
+#include "dump.h"
 #include "lfuda.h"
 #include "memutil.h"
 
@@ -23,6 +24,10 @@ void *get_page(index_t *index) {
     return &a;
 }
 
+void print_data(index_t *index, FILE *file) {
+    fprintf(file, "%d", *(int *)index);
+}
+
 int main() {
     size_t m = 0, n = 0;
 
@@ -40,12 +45,19 @@ int main() {
     };
 
     lfuda_t lfu = lfuda_init(init);
+    output_t output = {};
+    output.print = print_data;
 
     index_t *array = calloc_checked(n, sizeof(index_t));
     for (size_t i = 0; i < n; ++i) {
+        static char buf[128];
+        snprintf(buf, 128, "dump%d.dot", i);
+        output.file = fopen(buf, "w");
         index_t *index = &array[i];
         scanf("%d", index);
         lfuda_get(lfu, index);
+        dump_cache(lfu, output);
+        fclose(output.file);
     }
 
     printf("%lu\n", lfuda_get_hits(lfu));
