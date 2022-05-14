@@ -1,9 +1,7 @@
 #include "dump.h"
 
 #include "basecache.h"
-#include "clist.h"
 #include "dllist.h"
-#include "hashtab.h"
 
 #include "memutil.h"
 #include <assert.h>
@@ -18,7 +16,15 @@ void dump_freq_links(freq_list_t freqlist, FILE *file) {
     freq_node_t current_freq_node = dl_list_get_first(freqlist);
 
     while (current_freq_node) {
-        fprintf(file, "\t\t%p;\n", current_freq_node);
+        fprintf(file, "\t\tfreq_%p;\n", current_freq_node);
+        current_freq_node = dl_node_get_next(current_freq_node);
+    }
+    fprintf(file, "\n");
+    current_freq_node = dl_list_get_first(freqlist);
+    fprintf(file, "\t\tfreq_%p", current_freq_node);
+    current_freq_node = dl_node_get_next(current_freq_node);
+    while (current_freq_node) {
+        fprintf(file, " -> freq_%p");
         current_freq_node = dl_node_get_next(current_freq_node);
     }
     fprintf(file, "\t}\n");
@@ -33,6 +39,7 @@ void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump) {
     FILE *file = format_dump->file;
 
     fprintf(file, "\tsubgraph FREQ_%p\n", freqnode);
+    fprintf(file, "\t{\n");
     fprintf(file, "\t\trankdir = TB;\n\n");
     fprintf(file, "\t\tfreq_%p [label = \"%u\", fillcolor = \"deepskyblue\", fontcolor = \"white\"];\n\n", freqnode,
             freq_node_get_key(freqnode));
@@ -44,7 +51,7 @@ void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump) {
         fprintf(file, "\t\tlocal_node_%p [label = \"", current_local_node);
         local_node_data_t current_local_node_data = local_node_get_fam(current_local_node);
         (format_dump->print)(current_local_node_data.index, file);
-        fprintf(file, "\"\n");
+        fprintf(file, "\"];\n");
         current_local_node = dl_node_get_next(current_local_node);
     }
     fprintf(file, "\n");
