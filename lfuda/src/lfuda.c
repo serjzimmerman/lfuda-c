@@ -72,11 +72,7 @@ static freq_node_t lfuda_next_freq_node_init(lfuda_t cache_, local_node_t localn
     rb_tree_insert(lfuda->rbtree, testnewfreq);
     // insert testnewfreq in freq list
     freq_node_t insertafter = rb_tree_closest_left(lfuda->rbtree, testnewfreq);
-    if (insertafter != testnewfreq) {
-        dl_list_insert_after(basecache->freq_list, insertafter, testnewfreq);
-    } else {
-        dl_list_push_front(basecache->freq_list, testnewfreq);
-    }
+    dl_list_insert_after(basecache->freq_list, insertafter, testnewfreq);
 
     return testnewfreq;
 }
