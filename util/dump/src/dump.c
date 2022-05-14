@@ -13,16 +13,19 @@
 #define MAXLEN 128
 #define STR(x) #x
 
-int index_cmp_string(char *str1, char *str2) {
-    return strcmp(str1, str2);
+int index_cmp_string(char **str1, char **str2) {
+    return strcmp(*str1, *str2);
 }
 
-unsigned long index_hash_string(char *str) {
+unsigned long index_hash_string(char **str_) {
     unsigned key = 5381;
+    char *str = *str_;
+
     while (*str != '\0') {
         key = ((key << 5) + key) + *str;
         str++;
     }
+
     return key;
 }
 
@@ -47,27 +50,33 @@ int main() {
     };
 
     lfu_t lfu = lfu_init(init);
-
     char **array = calloc_checked(n, sizeof(char *));
-    for (int i = 0; i < n; i++) {
-        static char buf[MAXLEN] = {0};
-        scanf("%" STR(MAXLEN) "s", buf);
-        size_t len = strlen(buf);
-        array[i] = calloc_checked(len + 1, sizeof(char));
-        memcpy(array[i], buf, len + 1);
-        lfu_get(lfu, array[i]);
-    }
 
     output_t output = {};
-    output.file = fopen("dump.dot", "w");
-    assert(output.file);
     output.print = print_elem_string;
 
-    dump_cache(lfu, output);
-    fclose(output.file);
+    for (size_t i = 0; i < n; i++) {
+        static char buf[MAXLEN] = {0};
+        scanf("%s", buf);
+
+        size_t len = strlen(buf);
+        array[i] = calloc_checked(len + 1, sizeof(char));
+
+        memcpy(array[i], buf, len + 1);
+        lfu_get(lfu, array[i]);
+
+        static char file[128] = {0};
+        snprintf(file, 128, "dump%i.dot", i);
+
+        output.file = fopen(file, "w");
+        dump_cache(lfu, output);
+        fclose(output.file);
+    }
+
     printf("%lu\n", lfu_get_hits(lfu));
 
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
+        free(array[i]);
     }
 
     lfu_free(lfu);
