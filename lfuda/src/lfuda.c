@@ -49,6 +49,19 @@ static size_t lfuda_get_next_key(lfuda_t cache_, local_node_t localnode) {
     return new_key;
 }
 
+static inline void lfuda_remove_freq_if_empty(struct lfuda_s *lfuda, freq_node_t root_node) {
+    assert(lfuda);
+    assert(root_node);
+
+    local_list_t local_list = freq_node_get_local(root_node);
+
+    if (dl_list_is_empty(local_list)) {
+        rb_tree_remove(lfuda->rbtree, root_node);
+        dl_list_free(local_list, NULL);
+        dl_list_remove(lfuda->base.freq_list, root_node);
+    }
+}
+
 //============================================================================================================
 
 static freq_node_t lfuda_next_freq_node_init(lfuda_t cache_, local_node_t localnode) {
@@ -149,22 +162,17 @@ static void *lfuda_get_case_found_impl(struct lfuda_s *lfuda, local_node_t found
     local_list_t local_list = freq_node_get_local(root_node);
     dl_list_remove(local_list, found);
 
-    // Remove root node from red-black tree and from freq_list if old local list is now empty
-    if (dl_list_is_empty(local_list)) {
-        rb_tree_remove(lfuda->rbtree, root_node);
-        dl_list_free(local_list, NULL);
-        dl_list_remove(basecache->freq_list, root_node);
-    }
+    lfuda_remove_freq_if_empty(lfuda, root_node);
+    local_node_set_data(found, local_data);
 
     // Find next freq node(or create it)
     freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, found);
     dl_list_push_front(freq_node_get_local(next_freq), found);
-    // Insert a pointer to next_freq node into the found node
+
     local_node_set_freq_node(found, next_freq);
-    // Set updated information of the local node into it
     local_node_set_fam(found, local_data);
-    // Return cached page
-    return local_node_get_fam(found).cached;
+
+    return local_data.cached;
 }
 
 //============================================================================================================
