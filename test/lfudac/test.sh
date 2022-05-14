@@ -22,7 +22,7 @@ for file in ${current_folder}/${base_folder}/test*.dat; do
     fi
 
     # Compare inputs
-    if diff ${current_folder}/${base_folder}/ans${count}.dat ${current_folder}/${base_folder}/temp.dat; then
+    if diff ${current_folder}/${base_folder}/answ${count}.dat ${current_folder}/${base_folder}/temp.dat; then
         echo "${green}Passed${reset}"
     else
         echo "${red}Failed${reset}"
