@@ -1,14 +1,15 @@
-#ifndef DUMP_CACHE_H
-#define DUMP_CACHE_H
+#ifndef LFUDA_DUMP_H
+#define LFUDA_DUMP_H
 
 #include "dllist.h"
-#include <stdio.h>
 
 #ifdef __cplusplus
 #include <cstddef>
+#include <cstdio>
 extern "C" {
 #else
 #include <stddef.h>
+#include <stdio.h>
 #endif
 
 typedef void (*format_print_index)(void *index, FILE *file);

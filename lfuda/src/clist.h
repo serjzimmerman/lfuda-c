@@ -32,14 +32,11 @@ typedef struct {
 // Utility functions for working with frequency and local lists
 
 // Init local node with pointer to a root node and fam data with pointer to cached data
-static inline local_node_t local_node_init(freq_node_t root_node, local_node_data_t data) {
-    assert(root_node);
-
+static inline local_node_t local_node_init(local_node_data_t data) {
     local_node_data_t *data_ptr = calloc_checked(1, sizeof(local_node_data_t));
     freq_node_t node = dl_node_init(data_ptr);
 
     *data_ptr = data;
-    data_ptr->root_node = root_node;
 
     return node;
 }
