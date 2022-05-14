@@ -83,7 +83,7 @@ void dump_cache(void *cache_, output_t format_dump) {
     //  Common features on nodes and edges of cache
     fprintf(file, "digraph CACHE\n");
     fprintf(file, "{\n");
-    fprintf(file, "\tgraph [dpi = 200, nodesep = 1];\n");
+    fprintf(file, "\tgraph [dpi = 600, nodesep = 1];\n");
     fprintf(file, "\trankdir = TB;\n");
     fprintf(file, "\tsplines = ortho;\n");
     fprintf(file, "\tedge [maxlen = 2, dir = \"both\", shape = \"normal\"];\n");

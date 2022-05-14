@@ -21,6 +21,11 @@ struct lfuda_s {
     size_t age;
 };
 
+typedef struct {
+    int key;
+    freq_node_t freq_node;
+} rb_entry_t;
+
 //============================================================================================================
 
 // compare 2 freq nodes by checking keys
@@ -77,9 +82,12 @@ static freq_node_t lfuda_next_freq_node_init(lfuda_t cache_, local_node_t localn
 
 lfuda_t lfuda_init(cache_init_t init) {
     struct lfuda_s *lfuda = calloc_checked(1, sizeof(struct lfuda_s));
+
     base_cache_init(&lfuda->base, init);
+
     lfuda->rbtree = rb_tree_init(freq_node_cmp);
-    lfuda->age = 1;
+    lfuda->age = 0;
+
     return lfuda;
 }
 
@@ -87,10 +95,8 @@ lfuda_t lfuda_init(cache_init_t init) {
 
 void lfuda_free(lfuda_t cache_) {
     struct lfuda_s *lfuda = (struct lfuda_s *)cache_;
-    // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfuda_s struct
-    struct base_cache_s *basecache = (struct base_cache_s *)cache_;
 
-    base_cache_free(basecache);
+    base_cache_free(&lfuda->base);
 
     rb_tree_free(lfuda->rbtree, NULL);
 
