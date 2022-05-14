@@ -83,13 +83,6 @@ static inline void freq_node_set_local(freq_node_t node_, local_list_t local) {
     data->local_list = local;
 }
 
-static inline freq_node_data_t freq_node_get_data(freq_node_t node_) {
-    assert(node_);
-    freq_node_data_t *data = (freq_node_data_t *)dl_node_get_data(node_);
-    assert(data);
-    return *data;
-}
-
 // Get local node data
 static inline local_node_data_t local_node_get_fam(local_node_t node_) {
     assert(node_);
@@ -161,6 +154,36 @@ static void local_node_free(local_node_t node_) {
 static void freq_list_free(freq_list_t list_) {
     assert(list_);
     dl_list_free(list_, freq_node_free_data);
+}
+
+// Prefer to use this functions over any others
+
+static inline local_node_data_t local_node_get_data(local_node_t node_) {
+    assert(node_);
+    local_node_data_t *data = (local_node_data_t *)dl_node_get_data(node_);
+    assert(data);
+    return *data;
+}
+
+static inline void local_node_set_data(local_node_t node_, local_node_data_t newdata) {
+    assert(node_);
+    local_node_data_t *data = (local_node_data_t *)dl_node_get_data(node_);
+    assert(data);
+    *data = newdata;
+}
+
+static inline freq_node_data_t freq_node_get_data(freq_node_t node_) {
+    assert(node_);
+    freq_node_data_t *data = (freq_node_data_t *)dl_node_get_data(node_);
+    assert(data);
+    return *data;
+}
+
+static inline void freq_node_set_data(freq_node_t node_, freq_node_data_t newdata) {
+    assert(node_);
+    freq_node_data_t *data = (freq_node_data_t *)dl_node_get_data(node_);
+    assert(data);
+    *data = newdata;
 }
 
 #endif
