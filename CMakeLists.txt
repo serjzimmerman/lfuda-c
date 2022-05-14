@@ -54,3 +54,4 @@ find_program(BASH_PROGRAM bash)
 
 add_subdirectory(lfuda)
 add_subdirectory(test)
+add_subdirectory(util)
