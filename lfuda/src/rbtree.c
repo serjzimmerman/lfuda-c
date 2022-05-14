@@ -603,7 +603,7 @@ const void *rb_tree_closest_left(rb_tree_t tree_, void *key) {
 
     assert(tree);
 
-    return rb_tree_closest_left_impl(tree->root, key, tree->cmp);
+    return (tree->root ? rb_tree_closest_left_impl(tree->root, key, tree->cmp) : NULL);
 }
 
 const void *rb_tree_closest_right_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
@@ -636,5 +636,5 @@ const void *rb_tree_closest_right(rb_tree_t tree_, void *key) {
 
     assert(tree);
 
-    return rb_tree_closest_right_impl(tree->root, key, tree->cmp);
+    return (tree->root ? rb_tree_closest_right_impl(tree->root, key, tree->cmp) : NULL);
 }
