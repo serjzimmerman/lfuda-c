@@ -56,25 +56,21 @@ static freq_node_t lfuda_next_freq_node_init(lfuda_t cache_, local_node_t localn
 
     size_t nextkey = lfuda_get_next_key(cache_, localnode);
 
-    freq_node_t testnewfreq = freq_node_init(nextkey);
-    freq_node_t newfreq = rb_tree_lookup(lfuda->rbtree, testnewfreq);
+    freq_node_t key_freq_node = freq_node_init(nextkey);
+    freq_node_t next_freq_node = rb_tree_closest_left(lfuda->rbtree, key_freq_node);
 
-    // if a node with our new key already exists then we return this node and free testnewfreq
-    // else we insert testnewnode in freq list and return testnewnode
-    if (newfreq) {
-        // remove testnewnode because we already have freq node with our key
-        // dl_list_free function used to remove local list of that freq node
-        dl_node_free(testnewfreq, NULL);
-        return newfreq;
+    if (!next_freq_node) {
+        rb_tree_insert(lfuda->rbtree, key_freq_node);
+        dl_list_push_front(basecache->freq_list, key_freq_node);
+        return key_freq_node;
     }
+    if (freq_node_get_key(next_freq_node) == nextkey) {
+        return next_freq_node;
+    }
+    rb_tree_insert(lfuda->rbtree, key_freq_node);
+    dl_list_insert_after(basecache->freq_list, next_freq_node, key_freq_node);
 
-    // insert testnewfreq in red black tree
-    rb_tree_insert(lfuda->rbtree, testnewfreq);
-    // insert testnewfreq in freq list
-    freq_node_t insertafter = rb_tree_closest_left(lfuda->rbtree, testnewfreq);
-    dl_list_insert_after(basecache->freq_list, insertafter, testnewfreq);
-
-    return testnewfreq;
+    return key_freq_node;
 }
 
 //============================================================================================================
