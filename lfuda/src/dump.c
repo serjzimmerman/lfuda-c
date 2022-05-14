@@ -42,7 +42,7 @@ void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump) {
 
     while (current_local_node) {
         fprintf(file, "\t\tlocal_node_%p [label = \"", current_local_node);
-        local_node_data_t current_local_node_data = dl_node_get_fam(current_local_node);
+        local_node_data_t current_local_node_data = local_node_get_fam(current_local_node);
         (format_dump->print)(current_local_node_data.index, file);
         fprintf(file, "\"\n");
         current_local_node = dl_node_get_next(current_local_node);
@@ -79,7 +79,7 @@ void dump_cache(void *cache_, output_t *format_dump) {
 
     //  Bypass through the freq_list and dump each local_list
     while (current_freq_node) {
-        dump_freq_node(current_freq_node, format_dump);
+        dump_freq_node_list(current_freq_node, format_dump);
         current_freq_node = dl_node_get_next(current_freq_node);
     }
 
