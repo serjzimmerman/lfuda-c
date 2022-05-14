@@ -16,7 +16,7 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-typedef char *(*format_print_index)(void *index);
+typedef void (*format_print_index)(void *index, FILE *file);
 
 //  Structure for correct dump of index in the neccessary file
 //  File must be opend before function of dump and closed after it

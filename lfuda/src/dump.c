@@ -41,8 +41,9 @@ void dump_freq_node_list(freq_node_t freqnode, output_s *format_dump) {
     local_node_t current_local_node = dl_list_get_first(local_list);
 
     while (!current_local_node) {
-        fprintf(file, "\t\tlocal_node_%p [label = \"%s\"]\n", current_local_node,
-                *(format_dump->print)(dl_node_get_data(current_local_node)));
+        fprintf(file, "\t\tlocal_node_%p [label = \"", current_local_node);
+        (format_dump->print)(dl_node_get_data(current_local_node), file);
+        fprintf(file, "\"\n");
         current_local_node = dl_node_get_next(current_local_node);
     }
     fprintf(file, "\n");
