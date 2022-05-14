@@ -23,16 +23,16 @@ typedef void (*format_print_index)(void *index, FILE *file);
 typedef struct {
     FILE *file;
     format_print_index print;
-} output_s;
+} output_t;
 
 //  Dump links of freq nodes
 void dump_freq_links(freq_list_t freqlist, FILE *file);
 
 //  Graph dump with using graphvis as API
-void dump_cache(void *cache_, output_s *format_dump);
+void dump_cache(void *cache_, output_t *format_dump);
 
 //  Dump local list corresponding to the weight
-void dump_freq_node_list(freq_node_t freqnode, output_s *format_dump);
+void dump_freq_node_list(freq_node_t freqnode, output_t *format_dump);
 
 #ifdef __cplusplus
 }
