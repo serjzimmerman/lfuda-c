@@ -6,7 +6,7 @@ set(LFUDA_SOURCES
     src/basecache.c
     src/lfu.c
     src/rbtree.c
-    # src/lfuda.c
+    src/lfuda.c
     src/dump.c
 )
 

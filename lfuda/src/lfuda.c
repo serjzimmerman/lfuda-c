@@ -193,8 +193,15 @@ static void *lfuda_get_case_is_not_full_impl(struct lfuda_s *lfuda, void *index)
         local_data.cached = curr_data_ptr;
     }
 
-    toinsert = local_node_init(first_freq, local_data);
-    base_cache_insert(basecache, first_freq, toinsert, index, NULL);
+    toinsert = local_node_init(local_data);
+
+    local_node_data_t data_to_insert = {};
+    data_to_insert.cached = curr_data_ptr;
+    data_to_insert.root_node = first_freq;
+    data_to_insert.index = index;
+    data_to_insert.frequency = LFUDA_INITIAL_FREQ;
+
+    base_cache_insert(basecache, first_freq, toinsert, data_to_insert, NULL);
 
     if (basecache->data_size) {
         memcpy(curr_data_ptr, page, basecache->data_size);
@@ -233,8 +240,14 @@ static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
 
     first_freq = lfuda_new_freq_node_init(lfuda);
 
-    toinsert = local_node_init(first_freq, local_data);
-    base_cache_insert(basecache, first_freq, toinsert, index, free_entry);
+    toinsert = local_node_init(local_data);
+    local_node_data_t data_to_insert = {};
+    data_to_insert.cached = curr_data_ptr;
+    data_to_insert.root_node = first_freq;
+    data_to_insert.index = index;
+    data_to_insert.frequency = LFUDA_INITIAL_FREQ;
+
+    base_cache_insert(basecache, first_freq, toinsert, data_to_insert, free_entry);
 
     if (basecache->data_size) {
         memcpy(curr_data_ptr, page, basecache->data_size);
