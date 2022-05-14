@@ -50,43 +50,36 @@ static freq_node_t next_freq_node_init(freq_list_t list, freq_node_t freqnode) {
     return next_freq;
 }
 
-void *lfu_get(lfu_t cache_, void *index) {
-    // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfu_s struct
-    base_cache_t *cache = (base_cache_t *)cache_;
-
+// Case 1. When there is already a node present
+static void *lfu_promote(base_cache_t *cache, local_node_t found) {
     assert(cache);
-    assert(index);
+    assert(found);
 
-    local_node_t found = base_cache_lookup(cache, &index);
+    // Increment hits counter
+    cache->hits++;
 
-    // 1. There is already a cache entry, then we promote it and move futher along the frequency list
-    if (found) {
-        // Increment hits counter
-        cache->hits++;
+    // Get frequency and root node of freq_node_t
+    local_node_data_t local_data = local_node_get_data(found);
+    freq_node_t root_node = local_data.root_node;
+    local_data.frequency++;
 
-        // Get frequency and root node of freq_node_t
-        local_node_data_t local_data = local_node_get_fam(found);
-        freq_node_t root_node = local_node_get_freq_node(found);
-        local_data.frequency++;
+    freq_node_data_t freq_data = freq_node_get_data(root_node);
+    // Remove node from this list and move to the freq node with incremented key
+    local_list_t local_list = freq_data.local_list;
+    dl_list_remove(local_list, found);
+    freq_node_t next_freq = next_freq_node_init(cache->freq_list, root_node);
+    local_data.root_node = next_freq;
 
-        // Remove node from this list and move to the freq node with incremented key
-        local_list_t local_list = freq_node_get_local(root_node);
-        dl_list_remove(local_list, found);
-        freq_node_t next_freq = next_freq_node_init(cache->freq_list, root_node);
-        local_node_set_freq_node(found, next_freq);
+    // If frequency node is empty, then remove it
+    base_cache_remove_freq_if_empty(cache, root_node);
 
-        // If frequency node is empty, then remove it
-        base_cache_remove_freq_if_empty(cache, root_node);
+    dl_list_push_front(freq_node_get_local(next_freq), found);
+    local_node_set_data(found, local_data);
 
-        dl_list_push_front(freq_node_get_local(next_freq), found);
-        local_node_set_fam(found, local_data);
+    return local_data.cached;
+}
 
-        return local_node_get_fam(found).cached;
-    }
-
-    // 2. If we get here, then the key is not present in the cache. In this case we call slow_get if it is provided and
-    // insert the key into the cache, while optionally copying the data. There are 2 subcases here: 2.1 and 2.3
-
+static void *lfu_insert_or_replace(base_cache_t *cache, void *index) {
     void *page = (cache->slow_get ? cache->slow_get(index) : NULL);
     local_node_t toinsert = NULL;
     char *curr_data_ptr = NULL;
@@ -106,11 +99,12 @@ void *lfu_get(lfu_t cache_, void *index) {
             local_data.cached = curr_data_ptr;
         }
 
-        toinsert = local_node_init(first_freq, local_data);
-        base_cache_insert(cache, first_freq, toinsert, index, NULL);
+        local_data.root_node = first_freq;
+        toinsert = local_node_init(local_data);
+        base_cache_insert(cache, first_freq, toinsert, local_data, NULL);
     }
 
-    // In this case the cache is full and we decide which entry to invalidate and evict based on LFU strategy
+    // 2.2 In this case the cache is full and we decide which entry to invalidate and evict based on LFU strategy
     else {
         freq_node_t first_freq = dl_list_get_first(cache->freq_list);
         local_node_t toevict = dl_list_get_last(freq_node_get_local(first_freq));
@@ -122,10 +116,12 @@ void *lfu_get(lfu_t cache_, void *index) {
         entry_t *free_entry = base_cache_remove(cache, toevict, &evicted_data.index);
 
         first_freq = next_freq_node_init(cache->freq_list, NULL);
-        toinsert = local_node_init(first_freq, local_data);
+
+        local_data.root_node = first_freq;
+        toinsert = local_node_init(local_data);
         local_node_free(toevict);
 
-        base_cache_insert(cache, first_freq, toinsert, index, free_entry);
+        base_cache_insert(cache, first_freq, toinsert, local_data, free_entry);
     }
 
     if (cache->data_size) {
@@ -133,6 +129,25 @@ void *lfu_get(lfu_t cache_, void *index) {
     }
 
     return page;
+}
+
+void *lfu_get(lfu_t cache_, void *index) {
+    // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfu_s struct
+    base_cache_t *cache = (base_cache_t *)cache_;
+
+    assert(cache);
+    assert(index);
+
+    local_node_t found = base_cache_lookup(cache, &index);
+
+    // 1. There is already a cache entry, then we promote it and move futher along the frequency list
+    if (found) {
+        return lfu_promote(cache, found);
+    }
+
+    // 2. If we get here, then the key is not present in the cache. In this case we call slow_get if it is provided and
+    // insert the key into the cache, while optionally copying the data. There are 2 subcases here: 2.2 and 2.3
+    return lfu_insert_or_replace(cache, index);
 }
 
 size_t lfu_get_hits(lfu_t cache_) {

@@ -47,7 +47,7 @@ local_node_t base_cache_lookup(base_cache_t *cache, void **index);
 entry_t *base_cache_remove(base_cache_t *cache, local_node_t node, void **index);
 
 // Inserts toinsert at freqnode (at head)
-void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index,
+void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, local_node_data_t local_data,
                        entry_t *free_entry);
 
 static inline void base_cache_remove_freq_if_empty(base_cache_t *cache, freq_node_t node) {

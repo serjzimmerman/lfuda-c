@@ -79,14 +79,16 @@ entry_t *base_cache_remove(base_cache_t *cache, local_node_t node, void **index)
     return free_entry;
 }
 
-void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, void *index,
+void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, local_node_data_t local_data,
                        entry_t *free_entry) {
     assert(cache);
     assert(freqnode);
     assert(toinsert);
 
+    void *index = local_data.index;
+
     // 1. Set the root of toinsert to freqnode
-    local_node_set_freq_node(toinsert, freqnode);
+    local_node_set_data(toinsert, local_data);
 
     // 2. Insert the node the the local list
     dl_list_push_front(freq_node_get_local(freqnode), toinsert);
