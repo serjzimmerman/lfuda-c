@@ -171,7 +171,7 @@ static void *lfuda_get_case_found_impl(struct lfuda_s *lfuda, local_node_t found
 
 //============================================================================================================
 
-static void *lfuda_get_case_is_not_full(struct lfuda_s *lfuda, void *index) {
+static void *lfuda_get_case_is_not_full_impl(struct lfuda_s *lfuda, void *index) {
     struct base_cache_s *basecache = &lfuda->base;
 
     void *page = (basecache->slow_get ? basecache->slow_get(index) : NULL);
@@ -205,7 +205,7 @@ static void *lfuda_get_case_is_not_full(struct lfuda_s *lfuda, void *index) {
 
 //============================================================================================================
 
-static void *lfuda_get_case_full(struct lfuda_s *lfuda, void *index) {
+static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
     struct base_cache_s *basecache = &lfuda->base;
 
     void *page = (basecache->slow_get ? basecache->slow_get(index) : NULL);
@@ -265,12 +265,12 @@ void *lfuda_get(lfuda_t cache_, void *index) {
 
     // 2. In this case cache is not full and we can just insert the node with initial frequency
     if (basecache->curr_top < basecache->size) {
-        return lfuda_get_case_is_not_full(lfuda, index);
+        return lfuda_get_case_is_not_full_impl(lfuda, index);
     }
     // 3. In this case the cache is already full and we need to evict some entry from
     // cache according to the LFU-DA policy
     else {
-        return lfuda_get_case_full(lfuda, index);
+        return lfuda_get_case_full_impl(lfuda, index);
     }
 }
 
