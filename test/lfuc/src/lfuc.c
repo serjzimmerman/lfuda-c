@@ -7,6 +7,8 @@
 #include "lfu.h"
 #include "memutil.h"
 
+#include <assert.h>
+
 typedef struct {
     int value;
 } index_t;
@@ -53,12 +55,12 @@ int main() {
         lfu_get(lfu, index);
     }
 
-    output_s output = {};
+    output_t output = {};
     output.file = fopen("dump.dot", "w");
     assert(output.file);
     output.print = print_elem;
 
-    dump_cache(lfu, &output);
+    dump_cache(lfu, output);
     fclose(output.file);
     printf("%lu\n", lfu_get_hits(lfu));
 
