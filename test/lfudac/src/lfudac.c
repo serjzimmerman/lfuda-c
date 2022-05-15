@@ -32,7 +32,7 @@ int main() {
     size_t m = 0, n = 0;
 
     int res = scanf("%lu %lu", &m, &n);
-    if (!res) {
+    if (res != 2) {
         ERROR("Invalid input\n");
     }
 
@@ -53,7 +53,9 @@ int main() {
         static char buf[128];
         snprintf(buf, 128, "dump%d.dot", i);
         index_t *index = &array[i];
-        scanf("%d", index);
+        if (scanf("%d", index) != 1) {
+            ERROR("Invalid input\n");
+        }
         lfuda_get(lfu, index);
 
 #ifdef DUMP

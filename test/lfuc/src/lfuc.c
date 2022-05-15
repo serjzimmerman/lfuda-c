@@ -34,7 +34,7 @@ int main() {
     size_t m = 0, n = 0;
 
     int res = scanf("%lu %lu", &m, &n);
-    if (!res) {
+    if (res != 2) {
         ERROR("Invalid input\n");
     }
 
@@ -51,7 +51,9 @@ int main() {
     index_t *array = calloc_checked(n, sizeof(index_t));
     for (int i = 0; i < n; ++i) {
         index_t *index = &array[i];
-        scanf("%d", index);
+        if (scanf("%d", index) != 1) {
+            ERROR("Invalid input\n");
+        }
         lfu_get(lfu, index);
     }
 
