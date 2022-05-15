@@ -7,7 +7,7 @@ usage_string = "gentest.py -n <num> -o output"
 
 MAX_REQUEST_VALUE = 9
 MAX_CACHE_SIZE = 100
-MAX_REQUESTS_NUMBER = 1000
+MAX_REQUESTS_NUMBER = 10000
 
 def GenerateTest(test_number, cache_size, requests_number):
     test_str = []
