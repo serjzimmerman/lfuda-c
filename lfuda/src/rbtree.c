@@ -471,6 +471,9 @@ void *rb_tree_remove(rb_tree_t tree_, void *toremove) {
     // 3. Prune the leaf
     prune_leaf(tree, leaf);
 
+    // 4. Free the leaf
+    free(leaf);
+
     return result;
 }
 

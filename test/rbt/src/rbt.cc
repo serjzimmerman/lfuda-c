@@ -81,13 +81,18 @@ TEST(TestRBTree, Test2) {
 
     std::srand(0x0DED);
     for (int i = 0; i < modulo; ++i) {
-        tree.Insert(std::rand() % modulo);
+        int val = std::rand() % modulo;
+        if (!rb_tree_lookup(tree, &val)) {
+            tree.Insert(val);
+        }
     }
 
     EXPECT_RB_TREE_VALID(tree);
 
     for (int i = 0; i < modulo >> 2; ++i) {
-        tree.Remove(i);
+        if (rb_tree_lookup(tree, &i)) {
+            tree.Remove(i);
+        }
     }
 
     EXPECT_RB_TREE_VALID(tree);
