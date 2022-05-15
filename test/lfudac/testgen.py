@@ -5,7 +5,7 @@ import random, string, sys, getopt, itertools, os
 usage_string = "gentest.py -n <num> -o output"
 
 
-MAX_REQUEST_VALUE = 9
+MAX_REQUEST_VALUE = 100
 MAX_CACHE_SIZE = 100
 MAX_REQUESTS_NUMBER = 10000
 
