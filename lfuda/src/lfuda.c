@@ -275,7 +275,8 @@ static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
     curr_data_ptr = local_data.cached = evicted_data.cached;
 
     entry_t *free_entry = lfuda_remove(basecache, toevict, &evicted_data.index);
-    freq_node_t next_freq = lfuda_first_freq_node_init(lfuda);
+    local_node_set_data(toevict, local_data);
+    freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, toevict);
 
     local_data.root_node = next_freq;
     local_data.cached = evicted_data.cached;
