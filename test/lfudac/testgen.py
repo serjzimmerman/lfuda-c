@@ -5,9 +5,9 @@ import random, string, sys, getopt, itertools, os
 usage_string = "gentest.py -n <num> -o output"
 
 
-MAX_REQUEST_VALUE = 10
-MAX_CACHE_SIZE = 5
-MAX_REQUESTS_NUMBER = 50
+MAX_REQUEST_VALUE = 200
+MAX_CACHE_SIZE = 100
+MAX_REQUESTS_NUMBER = 10000
 
 def GenerateTest(test_number, cache_size, requests_number):
     test_str = []
@@ -26,7 +26,7 @@ def GenerateRandomTest(test_number):
 
 class LFUDA:
     hits = 0
-    age = 1
+    age = 0
     size = 0
     cur_top = 0
 
@@ -35,6 +35,7 @@ class LFUDA:
         self.head = cache_list
 
 class NODE:
+    weight = 0
     freq = 0
     index = 0
     def __init__(self, index=None, next=None):
@@ -87,11 +88,11 @@ def clist_insert_after (last: NODE, toinsert: NODE):
 def clist_insert_sorted (head: NODE, toinsert: NODE):
     if not head:
         return toinsert
-    if (head.freq >= toinsert.freq):
+    if (head.weight >= toinsert.weight):
         toinsert.next = head
         return toinsert
     ptr = head
-    while (ptr.next and ptr.next.freq < toinsert.freq):
+    while (ptr.next and ptr.next.weight < toinsert.weight):
         ptr = ptr.next
     clist_insert_after(ptr, toinsert)
     return head
@@ -100,7 +101,7 @@ def clist_get_to_remove (head: NODE):
     if not head:
         return None
     ptr = head
-    while (ptr.next and ptr.next.freq == head.freq):
+    while (ptr.next and ptr.next.weight == head.weight):
         ptr = ptr.next
     return ptr
 
@@ -116,17 +117,19 @@ def GenerateAnswer(test):
         if (found):
             lfuda.hits += 1
             found.freq += 1
-            found.freq = lfuda.age + 1 * found.freq
+            found.weight = lfuda.age + found.freq
             lfuda.head = clist_remove(lfuda.head, found)
             lfuda.head = clist_insert_sorted(lfuda.head, found)
         elif (lfuda.cur_top < lfuda.size):
-            entry.freq = lfuda.age
+            entry.freq = 1
+            entry.weight = lfuda.age + 1
             lfuda.head = clist_insert_sorted(lfuda.head, entry)
             lfuda.cur_top += 1
         else:
             toremove = clist_get_to_remove(lfuda.head)
-            lfuda.age = toremove.freq
-            entry.freq = lfuda.age
+            lfuda.age = toremove.weight
+            entry.freq = 1
+            entry.weight = lfuda.age + 1
             lfuda.head = clist_remove(lfuda.head, toremove)
             lfuda.head = clist_insert_sorted(lfuda.head, entry)
     return lfuda.hits
