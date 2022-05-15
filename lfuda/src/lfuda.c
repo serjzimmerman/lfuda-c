@@ -53,10 +53,9 @@ int rb_entry_cmp(void *node1_, void *node2_) {
 // Get cache structure and local_data of the local node.
 // Returns next key of the localnode
 
-static size_t lfuda_get_next_key(struct lfuda_s *cache, local_node_t localnode) {
+static size_t lfuda_get_next_key(struct lfuda_s *cache, size_t old_key) {
     assert(cache);
-    local_node_data_t local_data = local_node_get_data(localnode);
-    return local_data.frequency + cache->age;
+    return old_key + cache->age;
 }
 
 //============================================================================================================
@@ -103,14 +102,14 @@ static entry_t *lfuda_remove(base_cache_t *cache, local_node_t node, void **inde
 
 // Returns the freq node to insert localnode into
 
-static freq_node_t lfuda_next_freq_node_init(struct lfuda_s *lfuda, local_node_t localnode) {
+static freq_node_t lfuda_next_freq_node_init(struct lfuda_s *lfuda, local_node_t localnode, size_t old_key) {
     assert(lfuda);
     assert(localnode);
 
     // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfuda_s struct
     base_cache_t *basecache = &lfuda->base;
 
-    size_t nextkey = lfuda_get_next_key(lfuda, localnode);
+    size_t nextkey = lfuda_get_next_key(lfuda, old_key);
     rb_entry_t *next_freq = rb_tree_closest_left(lfuda->rbtree, &nextkey);
 
     if (!next_freq) {
@@ -193,18 +192,18 @@ static void *lfuda_get_case_found_impl(struct lfuda_s *lfuda, local_node_t found
     // Get data and root node of local node
     local_node_data_t local_data = local_node_get_data(found);
     freq_node_t root_node = local_node_get_freq_node(found);
-
+    freq_node_data_t root_node_data = freq_node_get_data(root_node);
     // Increment frequency of the found cache entry
     local_data.frequency += 1;
 
     // Remove local node from this local list and move to the local list
     // with another key (not just incremented)
-    local_list_t local_list = freq_node_get_local(root_node);
+    local_list_t local_list = root_node_data.local_list;
     dl_list_remove(local_list, found);
     lfuda_remove_freq_if_empty(lfuda, root_node);
     // Find next freq node (or create it)
     local_node_set_data(found, local_data);
-    freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, found);
+    freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, found, root_node_data.key);
     dl_list_push_front(freq_node_get_local(next_freq), found);
 
     local_data.root_node = next_freq;
@@ -265,18 +264,19 @@ static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
     // Get first node of frequency list
     // (according to the LFU-DA policy we must evict entry with lowest freq)
     freq_node_t first_freq = dl_list_get_first(basecache->freq_list);
+    freq_node_data_t first_freq_data = freq_node_get_data(first_freq);
 
     // According to the LFU-DA policy we must evict least recently used entry in
     // the list of nodes with the same freq
-    local_node_t toevict = dl_list_get_last(freq_node_get_local(first_freq));
+    local_node_t toevict = dl_list_get_last(first_freq_data.local_list);
     local_node_data_t evicted_data = local_node_get_data(toevict);
 
     lfuda->age = freq_node_get_key(evicted_data.root_node);
     curr_data_ptr = local_data.cached = evicted_data.cached;
 
+    freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, toevict, first_freq_data.key);
     entry_t *free_entry = lfuda_remove(basecache, toevict, &evicted_data.index);
     local_node_set_data(toevict, local_data);
-    freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, toevict);
 
     local_data.root_node = next_freq;
     local_data.cached = evicted_data.cached;
@@ -330,4 +330,12 @@ size_t lfuda_get_hits(lfuda_t cache_) {
     assert(cache);
 
     return cache->hits;
+}
+
+size_t lfuda_get_age(lfuda_t cache_) {
+    struct lfuda_s *cache = (struct lfuda_s *)cache_;
+
+    assert(cache);
+
+    return cache->age;
 }
