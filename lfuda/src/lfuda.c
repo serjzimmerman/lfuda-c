@@ -168,12 +168,13 @@ freq_node_t lfuda_first_freq_node_init(struct lfuda_s *lfuda) {
 
     // Get first node of the frequency list
     freq_node_t first_freq = dl_list_get_first(basecache->freq_list);
+    size_t first_freq_key = lfuda->age + 1;
 
     // When a new object is added, its key should be set to cache's age
-    if (!first_freq || freq_node_get_key(first_freq) != lfuda->age) {
+    if (!first_freq || freq_node_get_key(first_freq) != first_freq_key) {
         // create new freq node and insert it in a red-black tree
-        freq_node_t new_freq_node = freq_node_init(lfuda->age + 1);
-        rb_tree_insert(lfuda->rbtree, rb_entry_init(lfuda->age, new_freq_node));
+        freq_node_t new_freq_node = freq_node_init(first_freq_key);
+        rb_tree_insert(lfuda->rbtree, rb_entry_init(first_freq_key, new_freq_node));
         dl_list_push_front(basecache->freq_list, new_freq_node);
         return new_freq_node;
     }
