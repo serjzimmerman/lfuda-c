@@ -45,7 +45,7 @@ int main() {
     };
 
     lfuda_t lfu = lfuda_init(init);
-    output_t output = {};
+    output_t output = {0};
     output.print = print_data;
 
     index_t *array = calloc_checked(n, sizeof(index_t));

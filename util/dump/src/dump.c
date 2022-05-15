@@ -52,7 +52,7 @@ int main() {
     lfu_t lfu = lfu_init(init);
     char **array = calloc_checked(n, sizeof(char *));
 
-    output_t output = {};
+    output_t output = {0};
     output.print = print_elem_string;
 
     for (size_t i = 0; i < n; i++) {

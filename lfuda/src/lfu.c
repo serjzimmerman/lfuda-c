@@ -102,7 +102,7 @@ static void *lfu_insert_or_replace(base_cache_t *cache, void *index) {
     char *curr_data_ptr = NULL;
 
     // Initialize local_data with corrent info
-    local_node_data_t local_data = {};
+    local_node_data_t local_data = {0};
     // local_data.cached = curr_data_ptr;
     local_data.frequency = 1;
     local_data.index = index;

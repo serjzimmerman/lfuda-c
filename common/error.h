@@ -11,7 +11,13 @@
 #include <stdlib.h>
 #endif
 
-#define UNUSED_PARAMETER(expr) (void)(expr);
+#ifdef _MSC_VER 
+#define PRETTY_FUNCTION__ __FUNCSIG__ 
+#else
+#define PRETTY_FUNCTION__ __PRETTY_FUNCTION__
+#endif
+
+#define UNUSED_PARAMETER(expr) (void)(expr)
 
 #if defined(NDEBUG)
 #define MESSAGE(format, ...)                                                                                           \
@@ -23,7 +29,7 @@
 #define MESSAGE(errtype, format, ...)                                                                                  \
     do {                                                                                                               \
         fprintf(stderr, "%s: at line %d of %s in function %s\n" format, errtype, __LINE__, __FILE__,                   \
-                __PRETTY_FUNCTION__, ##__VA_ARGS__);                                                                   \
+                PRETTY_FUNCTION__, ##__VA_ARGS__);                                                                     \
     } while (0)
 #endif
 

@@ -57,7 +57,7 @@ int main() {
         lfu_get(lfu, index);
     }
 
-    output_t output = {};
+    output_t output = {0};
     output.file = fopen("dump.dot", "w");
     assert(output.file);
     output.print = print_elem;
