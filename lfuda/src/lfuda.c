@@ -172,7 +172,7 @@ freq_node_t lfuda_first_freq_node_init(struct lfuda_s *lfuda) {
     // When a new object is added, its key should be set to cache's age
     if (!first_freq || freq_node_get_key(first_freq) != lfuda->age) {
         // create new freq node and insert it in a red-black tree
-        freq_node_t new_freq_node = freq_node_init(lfuda->age);
+        freq_node_t new_freq_node = freq_node_init(lfuda->age + 1);
         rb_tree_insert(lfuda->rbtree, rb_entry_init(lfuda->age, new_freq_node));
         dl_list_push_front(basecache->freq_list, new_freq_node);
         return new_freq_node;

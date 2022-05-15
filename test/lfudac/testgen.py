@@ -26,7 +26,7 @@ def GenerateRandomTest(test_number):
 
 class LFUDA:
     hits = 0
-    age = 0
+    age = 1
     size = 0
     cur_top = 0
 
