@@ -5,9 +5,9 @@ import random, string, sys, getopt, itertools, os
 usage_string = "gentest.py -n <num> -o output"
 
 
-MAX_REQUEST_VALUE = 100
-MAX_CACHE_SIZE = 100
-MAX_REQUESTS_NUMBER = 10000
+MAX_REQUEST_VALUE = 10
+MAX_CACHE_SIZE = 5
+MAX_REQUESTS_NUMBER = 50
 
 def GenerateTest(test_number, cache_size, requests_number):
     test_str = []
@@ -26,7 +26,7 @@ def GenerateRandomTest(test_number):
 
 class LFUDA:
     hits = 0
-    age = 1
+    age = 0
     size = 0
     cur_top = 0
 
@@ -53,29 +53,61 @@ def push_front(head: NODE, val: NODE):
     return new_head
 
 def clist_lookup (head: NODE, val: NODE):
+    if not head:
+        return None
+    if (head.index == val.index):
+        return head
     ptr = head
-    while ptr and ptr.next:
+    while ptr.next:
         if (ptr.index == val.index):
             return ptr
         ptr = ptr.next
-    if (ptr and ptr.index == val.index):
+    if (ptr.index == val.index):
         return ptr
     return None
 
 def clist_remove (head: NODE, toremove: NODE):
+    if (head == toremove):
+        return head.next
     ptr = head
     while ptr.next:
         if (ptr.next.index == toremove.index):
             ptr.next = ptr.next.next
-    return ptr.next
+            break
+        ptr = ptr.next
+    return head
 
-def cache_node_freq (cache_node):
-    return cache_node.freq
+def clist_insert_after (last: NODE, toinsert: NODE):
+    if not last:
+        return None
+    toinsert.next = last.next
+    last.next = toinsert
+    return toinsert
+
+def clist_insert_sorted (head: NODE, toinsert: NODE):
+    if not head:
+        return toinsert
+    if (head.freq >= toinsert.freq):
+        toinsert.next = head
+        return toinsert
+    ptr = head
+    while (ptr.next and ptr.next.freq < toinsert.freq):
+        ptr = ptr.next
+    clist_insert_after(ptr, toinsert)
+    return head
+
+def clist_get_to_remove (head: NODE):
+    if not head:
+        return None
+    ptr = head
+    while (ptr.next and ptr.next.freq == head.freq):
+        ptr = ptr.next
+    return ptr
 
 def GenerateAnswer(test):
     cache_size = int(test[0])
     test_list = [int(request) for request in test[2:]]
-    
+
     lfuda = LFUDA(cache_size, None)
 
     for index in test_list:
@@ -83,16 +115,20 @@ def GenerateAnswer(test):
         found = clist_lookup(lfuda.head, entry)
         if (found):
             lfuda.hits += 1
+            found.freq += 1
             found.freq = lfuda.age + 1 * found.freq
+            lfuda.head = clist_remove(lfuda.head, found)
+            lfuda.head = clist_insert_sorted(lfuda.head, found)
         elif (lfuda.cur_top < lfuda.size):
             entry.freq = lfuda.age
-            lfuda.head = push_front(lfuda.head, entry)
+            lfuda.head = clist_insert_sorted(lfuda.head, entry)
             lfuda.cur_top += 1
         else:
-            toremove = lfuda.head
+            toremove = clist_get_to_remove(lfuda.head)
             lfuda.age = toremove.freq
             entry.freq = lfuda.age
-            lfuda.head = push_front(lfuda.head, entry)
+            lfuda.head = clist_remove(lfuda.head, toremove)
+            lfuda.head = clist_insert_sorted(lfuda.head, entry)
     return lfuda.hits
            
 
