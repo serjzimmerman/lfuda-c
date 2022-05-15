@@ -71,7 +71,7 @@ static inline void lfuda_remove_freq_if_empty(struct lfuda_s *lfuda, freq_node_t
         rb_entry_t *entry = rb_tree_remove(lfuda->rbtree, &freq_key);
         free(entry);
         local_list_free(local_list);
-        free(dl_list_remove(lfuda->base.freq_list, root_node));
+        freq_node_free(dl_list_remove(lfuda->base.freq_list, root_node));
     }
 }
 
