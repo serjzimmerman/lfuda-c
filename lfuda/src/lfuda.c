@@ -202,6 +202,7 @@ static void *lfuda_get_case_found_impl(struct lfuda_s *lfuda, local_node_t found
     dl_list_remove(local_list, found);
     lfuda_remove_freq_if_empty(lfuda, root_node);
     // Find next freq node (or create it)
+    local_node_set_data(found, local_data);
     freq_node_t next_freq = lfuda_next_freq_node_init(lfuda, found);
     dl_list_push_front(freq_node_get_local(next_freq), found);
 
