@@ -15,6 +15,7 @@
 #include "memutil.h"
 #include <assert.h>
 
+//============================================================================================================
 struct lfuda_s {
     base_cache_t base;
     rb_tree_t rbtree;
@@ -50,7 +51,7 @@ int rb_entry_cmp(void *node1_, void *node2_) {
 //============================================================================================================
 
 // Get cache structure and local_data of the local node.
-// Return next key of the cached element
+// Returns next key of the localnode
 
 static size_t lfuda_get_next_key(struct lfuda_s *cache, local_node_t localnode) {
     assert(cache);
@@ -59,6 +60,8 @@ static size_t lfuda_get_next_key(struct lfuda_s *cache, local_node_t localnode) 
 }
 
 //============================================================================================================
+
+// Remove freq node from the freq list and from the red black tree if local list of this freq node is empty
 
 static inline void lfuda_remove_freq_if_empty(struct lfuda_s *lfuda, freq_node_t root_node) {
     assert(lfuda);
@@ -76,6 +79,8 @@ static inline void lfuda_remove_freq_if_empty(struct lfuda_s *lfuda, freq_node_t
 }
 
 //============================================================================================================
+
+// Remove local node from the cache
 
 static entry_t *lfuda_remove(base_cache_t *cache, local_node_t node, void **index) {
     assert(cache);
@@ -95,6 +100,8 @@ static entry_t *lfuda_remove(base_cache_t *cache, local_node_t node, void **inde
 }
 
 //============================================================================================================
+
+// Returns the freq node to insert localnode into
 
 static freq_node_t lfuda_next_freq_node_init(struct lfuda_s *lfuda, local_node_t localnode) {
     assert(lfuda);
@@ -152,6 +159,8 @@ void lfuda_free(lfuda_t cache_) {
 }
 
 //============================================================================================================
+
+// Returns the freq node for inserting new local node
 
 freq_node_t lfuda_first_freq_node_init(struct lfuda_s *lfuda) {
     assert(lfuda);
@@ -253,7 +262,7 @@ static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
     local_data.index = index;
 
     // Get first node of frequency list
-    //(according to the LFU-DA policy we must evict entry with lowest freq)
+    // (according to the LFU-DA policy we must evict entry with lowest freq)
     freq_node_t first_freq = dl_list_get_first(basecache->freq_list);
 
     // According to the LFU-DA policy we must evict least recently used entry in

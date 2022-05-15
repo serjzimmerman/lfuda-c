@@ -9,6 +9,8 @@
 
 #include "memutil.h"
 
+//============================================================================================================
+
 // Basically LFU cache is a base-cache with an implemented policy
 struct lfu_s {
     base_cache_t base;
@@ -21,6 +23,8 @@ lfu_t lfu_init(cache_init_t init) {
 
     return lfu;
 }
+
+//============================================================================================================
 
 // Get next freq node and create one if there is no immediate successor. If freqnode is NULL, then return frequency node
 // with key 1, or create one if there are none
@@ -50,6 +54,8 @@ static freq_node_t next_freq_node_init(freq_list_t list, freq_node_t freqnode) {
     return next_freq;
 }
 
+//============================================================================================================
+
 // Case 1. When there is already a node present
 static void *lfu_promote(base_cache_t *cache, local_node_t found) {
     assert(cache);
@@ -78,6 +84,8 @@ static void *lfu_promote(base_cache_t *cache, local_node_t found) {
 
     return local_data.cached;
 }
+
+//============================================================================================================
 
 static void *lfu_insert_or_replace(base_cache_t *cache, void *index) {
     void *page = (cache->slow_get ? cache->slow_get(index) : NULL);
@@ -131,6 +139,8 @@ static void *lfu_insert_or_replace(base_cache_t *cache, void *index) {
     return page;
 }
 
+//============================================================================================================
+
 void *lfu_get(lfu_t cache_, void *index) {
     // In this case strict-aliasing does not apply, because base_cache_t is the first member of lfu_s struct
     base_cache_t *cache = (base_cache_t *)cache_;
@@ -150,6 +160,8 @@ void *lfu_get(lfu_t cache_, void *index) {
     return lfu_insert_or_replace(cache, index);
 }
 
+//============================================================================================================
+
 size_t lfu_get_hits(lfu_t cache_) {
     base_cache_t *cache = (base_cache_t *)cache_;
 
@@ -157,6 +169,8 @@ size_t lfu_get_hits(lfu_t cache_) {
 
     return cache->hits;
 }
+
+//============================================================================================================
 
 void lfu_free(lfu_t cache_) {
     base_cache_t *cache = (base_cache_t *)cache_;

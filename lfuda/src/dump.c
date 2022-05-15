@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+//============================================================================================================
+
 static void dump_freq_links(freq_list_t freqlist, FILE *file) {
     assert(freqlist);
 
@@ -33,6 +35,8 @@ static void dump_freq_links(freq_list_t freqlist, FILE *file) {
     fprintf(file, "\n");
     fprintf(file, "\t}\n");
 }
+
+//============================================================================================================
 
 static void dump_freq_node_list(freq_node_t freqnode, output_t format_dump) {
     assert(freqnode);
@@ -70,6 +74,8 @@ static void dump_freq_node_list(freq_node_t freqnode, output_t format_dump) {
     fprintf(file, "\n");
     fprintf(file, "\t}\n");
 }
+
+//============================================================================================================
 
 void dump_cache(void *cache_, output_t format_dump) {
     assert(cache_);

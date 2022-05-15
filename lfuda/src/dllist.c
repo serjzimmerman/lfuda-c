@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <string.h>
 
+//============================================================================================================
 struct dl_node_s {
     struct dl_node_s *next, *prev;
     void *data;
@@ -22,11 +23,15 @@ struct dl_node_s {
     char fam[];
 };
 
+//============================================================================================================
+
 dl_node_t dl_node_init(void *data) {
     struct dl_node_s *node = calloc_checked(1, sizeof(struct dl_node_s));
     node->data = data;
     return node;
 }
+
+//============================================================================================================
 
 dl_node_t dl_node_init_fam(void *data, size_t size, void *fam_data) {
     assert(fam_data);
@@ -39,12 +44,16 @@ dl_node_t dl_node_init_fam(void *data, size_t size, void *fam_data) {
     return node;
 }
 
+//============================================================================================================
+
 // Return pointer to an internal fam data
 void *dl_node_get_fam(dl_node_t node_) {
     struct dl_node_s *node = (struct dl_node_s *)node_;
     assert(node);
     return &(node->fam);
 }
+
+//============================================================================================================
 
 void dl_node_free(dl_node_t node_, void (*data_free)(void *)) {
     if (data_free) {
@@ -53,11 +62,15 @@ void dl_node_free(dl_node_t node_, void (*data_free)(void *)) {
     free(node_);
 }
 
+//============================================================================================================
+
 void *dl_node_get_data(dl_node_t node_) {
     struct dl_node_s *node = (struct dl_node_s *)node_;
     assert(node);
     return node->data;
 }
+
+//============================================================================================================
 
 void dl_node_set_data(dl_node_t node_, void *data) {
     struct dl_node_s *node = (struct dl_node_s *)node_;
@@ -65,11 +78,15 @@ void dl_node_set_data(dl_node_t node_, void *data) {
     node->data = data;
 }
 
+//============================================================================================================
+
 dl_node_t dl_node_get_next(dl_node_t node_) {
     struct dl_node_s *node = (struct dl_node_s *)node_;
     assert(node);
     return node->next;
 }
+
+//============================================================================================================
 
 dl_node_t dl_node_get_prev(dl_node_t node_) {
     struct dl_node_s *node = (struct dl_node_s *)node_;
@@ -77,15 +94,20 @@ dl_node_t dl_node_get_prev(dl_node_t node_) {
     return node->prev;
 }
 
+//============================================================================================================
 struct dl_list_s {
     struct dl_node_s *head, *tail;
     size_t len;
 };
 
+//============================================================================================================
+
 dl_list_t dl_list_init() {
     struct dl_list_s *list = calloc_checked(1, sizeof(struct dl_list_s));
     return list;
 }
+
+//============================================================================================================
 
 int dl_list_is_empty(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
@@ -93,17 +115,23 @@ int dl_list_is_empty(dl_list_t list_) {
     return !(list->len);
 }
 
+//============================================================================================================
+
 dl_node_t dl_list_get_first(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
     assert(list);
     return list->head;
 }
 
+//============================================================================================================
+
 dl_node_t dl_list_get_last(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
     assert(list);
     return list->tail;
 }
+
+//============================================================================================================
 
 void dl_list_push_front(dl_list_t list_, dl_node_t node_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
@@ -127,6 +155,8 @@ void dl_list_push_front(dl_list_t list_, dl_node_t node_) {
     list->len++;
 }
 
+//============================================================================================================
+
 void dl_list_push_back(dl_list_t list_, dl_node_t node_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
     struct dl_node_s *node = (struct dl_node_s *)node_;
@@ -147,6 +177,8 @@ void dl_list_push_back(dl_list_t list_, dl_node_t node_) {
 
     list->len++;
 }
+
+//============================================================================================================
 
 void dl_list_insert_after(dl_list_t list_, dl_node_t node_, dl_node_t toinsert_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
@@ -171,6 +203,8 @@ void dl_list_insert_after(dl_list_t list_, dl_node_t node_, dl_node_t toinsert_)
     list->len++;
 }
 
+//============================================================================================================
+
 dl_node_t dl_list_pop_front(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
 
@@ -193,6 +227,8 @@ dl_node_t dl_list_pop_front(dl_list_t list_) {
     return node;
 }
 
+//============================================================================================================
+
 dl_node_t dl_list_pop_back(dl_list_t list_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
 
@@ -214,6 +250,8 @@ dl_node_t dl_list_pop_back(dl_list_t list_) {
     return node;
 }
 
+//============================================================================================================
+
 dl_node_t dl_list_remove(dl_list_t list_, dl_node_t node_) {
     struct dl_list_s *list = (struct dl_list_s *)list_;
     struct dl_node_s *node = (struct dl_node_s *)node_;
@@ -234,6 +272,8 @@ dl_node_t dl_list_remove(dl_list_t list_, dl_node_t node_) {
     list->len--;
     return node;
 }
+
+//============================================================================================================
 
 void dl_list_free(dl_list_t list_, void (*data_free)(void *)) {
     struct dl_list_s *list = (struct dl_list_s *)list_;

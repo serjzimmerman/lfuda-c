@@ -14,13 +14,13 @@ extern "C" {
 
 typedef void *lfuda_t;
 
-// initialize cache
+// Initialize cache
 lfuda_t lfuda_init(cache_init_t init);
 
-// free cache
+// Free cache
 void lfuda_free(lfuda_t lfuda);
 
-// get page by index
+// Get page by index
 void *lfuda_get(lfuda_t cache_, void *index);
 
 // Get current hits in lfuda

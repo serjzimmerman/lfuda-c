@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+//============================================================================================================
+
 base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
     assert(cache);
 
@@ -41,6 +43,8 @@ base_cache_t *base_cache_init(base_cache_t *cache, cache_init_t init) {
     return cache;
 }
 
+//============================================================================================================
+
 entry_t *entry_init(void *index, local_node_t local) {
     entry_t *entry = calloc_checked(1, sizeof(entry_t));
     assert(index);
@@ -50,6 +54,8 @@ entry_t *entry_init(void *index, local_node_t local) {
 
     return entry;
 }
+
+//============================================================================================================
 
 local_node_t base_cache_lookup(base_cache_t *cache, void **index) {
     assert(cache);
@@ -61,6 +67,8 @@ local_node_t base_cache_lookup(base_cache_t *cache, void **index) {
 
     return result;
 }
+
+//============================================================================================================
 
 entry_t *base_cache_remove(base_cache_t *cache, local_node_t node, void **index) {
     assert(cache);
@@ -78,6 +86,8 @@ entry_t *base_cache_remove(base_cache_t *cache, local_node_t node, void **index)
 
     return free_entry;
 }
+
+//============================================================================================================
 
 void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t toinsert, local_node_data_t local_data,
                        entry_t *free_entry) {
@@ -105,6 +115,8 @@ void base_cache_insert(base_cache_t *cache, freq_node_t freqnode, local_node_t t
 
     hashtab_insert(&cache->table, entry);
 }
+
+//============================================================================================================
 
 void base_cache_free(base_cache_t *cache) {
     assert(cache);

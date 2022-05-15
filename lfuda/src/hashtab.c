@@ -19,6 +19,7 @@
 #include "dllist.h"
 #include "hashtab.h"
 
+//============================================================================================================
 typedef struct {
     dl_node_t node;
 #ifdef HASHTAB_USE_N_OPTIMIZATION
@@ -335,7 +336,7 @@ hashtab_t hashtab_resize(hashtab_t table_, size_t newsize) {
         dl_node_t node = dl_list_pop_front(table->list);
         hashtab_insert_impl((hashtab_t *)&new_table, node); // Move the node to the new table
     }
-    //  Free old hash table
+    // Free old hash table
     hashtab_free(table);
     return new_table;
 }

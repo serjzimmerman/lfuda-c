@@ -8,6 +8,8 @@
 
 #include <assert.h>
 
+//============================================================================================================
+
 enum node_color_e {
     COLOR_RED = 0,
     COLOR_BLACK = 1,
@@ -24,6 +26,8 @@ struct rb_tree_s {
     rb_node_t *root;
 };
 
+//============================================================================================================
+
 rb_node_t *rb_node_init(enum node_color_e color, void *data) {
     rb_node_t *node = calloc_checked(1, sizeof(rb_node_t));
     node->color = color;
@@ -31,11 +35,15 @@ rb_node_t *rb_node_init(enum node_color_e color, void *data) {
     return node;
 }
 
+//============================================================================================================
+
 rb_tree_t rb_tree_init(rb_cmp_func_t cmp) {
     struct rb_tree_s *tree = calloc_checked(1, sizeof(struct rb_tree_s));
     tree->cmp = cmp;
     return tree;
 }
+
+//============================================================================================================
 
 static void rb_tree_free_no_data_impl(rb_node_t *root) {
     assert(root);
@@ -50,6 +58,8 @@ static void rb_tree_free_no_data_impl(rb_node_t *root) {
 
     free(root);
 }
+
+//============================================================================================================
 
 static void rb_tree_free_data_impl(rb_node_t *root, rb_free_func_t data_free) {
     assert(root);
@@ -66,6 +76,8 @@ static void rb_tree_free_data_impl(rb_node_t *root, rb_free_func_t data_free) {
     data_free(root->data);
     free(root);
 }
+
+//============================================================================================================
 
 void rb_tree_free(rb_tree_t tree_, rb_free_func_t data_free) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
@@ -84,10 +96,14 @@ void rb_tree_free(rb_tree_t tree_, rb_free_func_t data_free) {
     free(tree);
 }
 
+//============================================================================================================
+
 // If node is NULL then it is considered black
 static inline enum node_color_e get_node_color(rb_node_t *node) {
     return (node ? node->color : COLOR_BLACK);
 }
+
+//============================================================================================================
 
 // Check wheter the node is a left child
 static inline int is_left_child(rb_node_t *node) {
@@ -97,6 +113,8 @@ static inline int is_left_child(rb_node_t *node) {
     return (node == node->parent->left ? 1 : 0);
 }
 
+//============================================================================================================
+
 // Check wheter the node is a right child
 static inline int is_right_child(rb_node_t *node) {
     assert(node);
@@ -104,6 +122,8 @@ static inline int is_right_child(rb_node_t *node) {
 
     return (node == node->parent->right ? 1 : 0);
 }
+
+//============================================================================================================
 
 static inline rb_node_t *get_sibling(rb_node_t *node) {
     assert(node);
@@ -115,6 +135,8 @@ static inline rb_node_t *get_sibling(rb_node_t *node) {
         return node->parent->left;
     }
 }
+
+//============================================================================================================
 
 static rb_node_t *rb_tree_bst_insert(struct rb_tree_s *tree, void *toinsert, rb_cmp_func_t cmp) {
     assert(tree);
@@ -152,6 +174,8 @@ static rb_node_t *rb_tree_bst_insert(struct rb_tree_s *tree, void *toinsert, rb_
     return node;
 }
 
+//============================================================================================================
+
 // Perform left rotate operation on the node
 static void left_rotate(struct rb_tree_s *tree, rb_node_t *node) {
     assert(tree);
@@ -179,6 +203,8 @@ static void left_rotate(struct rb_tree_s *tree, rb_node_t *node) {
     rchild->left = root;
     root->parent = rchild;
 }
+
+//============================================================================================================
 
 // Perform right rotate operation on the node
 static void right_rotate(struct rb_tree_s *tree, rb_node_t *node) {
@@ -208,6 +234,8 @@ static void right_rotate(struct rb_tree_s *tree, rb_node_t *node) {
     root->parent = lchild;
 }
 
+//============================================================================================================
+
 static void rotate_to_parent(struct rb_tree_s *tree, rb_node_t *node) {
     assert(tree);
     assert(node);
@@ -218,6 +246,8 @@ static void rotate_to_parent(struct rb_tree_s *tree, rb_node_t *node) {
         left_rotate(tree, node->parent);
     }
 }
+
+//============================================================================================================
 
 static void replace_node(rb_node_t *root, rb_node_t *child, struct rb_tree_s *tree) {
     assert(root);
@@ -240,6 +270,8 @@ static void replace_node(rb_node_t *root, rb_node_t *child, struct rb_tree_s *tr
     }
 }
 
+//============================================================================================================
+
 static rb_node_t *get_uncle(rb_node_t *node) {
     assert(node);
     assert(node->parent);
@@ -252,6 +284,8 @@ static rb_node_t *get_uncle(rb_node_t *node) {
     }
 }
 
+//============================================================================================================
+
 static int is_linear(rb_node_t *node) {
     assert(node);
     assert(node->parent);
@@ -260,6 +294,8 @@ static int is_linear(rb_node_t *node) {
     return (is_left_child(node) && is_left_child(node->parent)) ||
            (is_right_child(node) && is_right_child(node->parent));
 }
+
+//============================================================================================================
 
 // https://www.youtube.com/watch?v=KRWm1uhqMNI
 // This is an incredibly good explanation of the algorithm
@@ -294,6 +330,8 @@ static void recolor_after_insert(struct rb_tree_s *tree, rb_node_t *node) {
     tree->root->color = COLOR_BLACK;
 }
 
+//============================================================================================================
+
 void rb_tree_insert(rb_tree_t tree_, void *toinsert) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
@@ -308,6 +346,8 @@ void rb_tree_insert(rb_tree_t tree_, void *toinsert) {
     // Fix any red-black violations
     recolor_after_insert(tree, node);
 }
+
+//============================================================================================================
 
 static rb_node_t *rb_tree_lookup_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
     assert(cmp);
@@ -333,6 +373,8 @@ static rb_node_t *rb_tree_lookup_impl(rb_node_t *root, void *key, rb_cmp_func_t 
     return root;
 }
 
+//============================================================================================================
+
 const void *rb_tree_lookup(rb_tree_t tree_, void *key) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
@@ -343,12 +385,16 @@ const void *rb_tree_lookup(rb_tree_t tree_, void *key) {
     return (found ? found->data : NULL);
 }
 
+//============================================================================================================
+
 static rb_node_t *rb_tree_get_max_impl(rb_node_t *root) {
     while (root->right) {
         root = root->right;
     }
     return root;
 }
+
+//============================================================================================================
 
 static rb_node_t *rb_tree_get_min_impl(rb_node_t *root) {
     while (root->left) {
@@ -357,11 +403,15 @@ static rb_node_t *rb_tree_get_min_impl(rb_node_t *root) {
     return root;
 }
 
+//============================================================================================================
+
 static inline void swap_data(rb_node_t *a, rb_node_t *b) {
     void *temp = a->data;
     a->data = b->data;
     b->data = temp;
 }
+
+//============================================================================================================
 
 // This function swaps todelete node data with a leaf node that can then be safely pruned after red-black violation
 // fix-up
@@ -396,6 +446,8 @@ static rb_node_t *rb_tree_remove_impl(rb_node_t *root, struct rb_tree_s *tree, v
     }
 }
 
+//============================================================================================================
+
 static inline void prune_leaf(struct rb_tree_s *tree, rb_node_t *toprune) {
     assert(tree);
     assert(toprune);
@@ -411,6 +463,8 @@ static inline void prune_leaf(struct rb_tree_s *tree, rb_node_t *toprune) {
         toprune->parent->right = NULL;
     }
 }
+
+//============================================================================================================
 
 static void recolor_after_remove(struct rb_tree_s *tree, rb_node_t *leaf) {
     while (get_node_color(leaf) != COLOR_RED) {
@@ -454,6 +508,8 @@ static void recolor_after_remove(struct rb_tree_s *tree, rb_node_t *leaf) {
     leaf->color = COLOR_BLACK;
 }
 
+//============================================================================================================
+
 void *rb_tree_remove(rb_tree_t tree_, void *toremove) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
@@ -476,6 +532,8 @@ void *rb_tree_remove(rb_tree_t tree_, void *toremove) {
 
     return result;
 }
+
+//============================================================================================================
 
 // Global variable to keep track of current index for dumping
 static unsigned current_index_ = 0;
@@ -500,6 +558,8 @@ void rb_tree_dump_impl(rb_node_t *root, FILE *fp, rb_stringify_func_t stringify)
     rb_tree_dump_impl(root->right, fp, stringify);
 }
 
+//============================================================================================================
+
 void rb_tree_dump(rb_tree_t tree_, FILE *fp, rb_stringify_func_t stringify) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
@@ -511,10 +571,13 @@ void rb_tree_dump(rb_tree_t tree_, FILE *fp, rb_stringify_func_t stringify) {
     fprintf(fp, "}\n");
 }
 
+//============================================================================================================
 typedef struct {
     size_t blacks;
     int valid;
 } rb_tree_valid_t;
+
+//============================================================================================================
 
 static inline rb_tree_valid_t valid_inits(size_t blacks, int valid) {
     rb_tree_valid_t result = {0};
@@ -522,6 +585,8 @@ static inline rb_tree_valid_t valid_inits(size_t blacks, int valid) {
     result.valid = valid;
     return result;
 }
+
+//============================================================================================================
 
 // https://cs.kangwon.ac.kr/~leeck/file_processing/red_black_tree.pdf
 static rb_tree_valid_t validate_subtree_rb(rb_node_t *root) {
@@ -552,6 +617,8 @@ static rb_tree_valid_t validate_subtree_rb(rb_node_t *root) {
     }
 }
 
+//============================================================================================================
+
 // Validate that all red-black tree properties are followed
 int rb_tree_is_valid(rb_tree_t tree_) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
@@ -572,9 +639,13 @@ int rb_tree_is_valid(rb_tree_t tree_) {
     return valid.valid;
 }
 
+//============================================================================================================
+
 static inline int iabs(const int value) {
     return (value > 0 ? value : -value);
 }
+
+//============================================================================================================
 
 const void *rb_tree_closest_left_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
     assert(root);
@@ -601,6 +672,8 @@ const void *rb_tree_closest_left_impl(rb_node_t *root, void *key, rb_cmp_func_t 
     return closest_data;
 }
 
+//============================================================================================================
+
 const void *rb_tree_closest_left(rb_tree_t tree_, void *key) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
 
@@ -608,6 +681,8 @@ const void *rb_tree_closest_left(rb_tree_t tree_, void *key) {
 
     return (tree->root ? rb_tree_closest_left_impl(tree->root, key, tree->cmp) : NULL);
 }
+
+//============================================================================================================
 
 const void *rb_tree_closest_right_impl(rb_node_t *root, void *key, rb_cmp_func_t cmp) {
     assert(root);
@@ -633,6 +708,8 @@ const void *rb_tree_closest_right_impl(rb_node_t *root, void *key, rb_cmp_func_t
 
     return closest_data;
 }
+
+//============================================================================================================
 
 const void *rb_tree_closest_right(rb_tree_t tree_, void *key) {
     struct rb_tree_s *tree = (struct rb_tree_s *)tree_;
