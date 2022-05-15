@@ -52,12 +52,15 @@ int main() {
     for (size_t i = 0; i < n; ++i) {
         static char buf[128];
         snprintf(buf, 128, "dump%d.dot", i);
-        // output.file = fopen(buf, "w");
         index_t *index = &array[i];
         scanf("%d", index);
         lfuda_get(lfu, index);
-        // dump_cache(lfu, output);
-        // fclose(output.file);
+
+#ifdef DUMP
+        output.file = fopen(buf, "w");
+        dump_cache(lfu, output);
+        fclose(output.file);
+#endif
     }
 
     printf("%lu\n", lfuda_get_hits(lfu));
