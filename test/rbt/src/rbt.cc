@@ -105,7 +105,7 @@ TEST(TestRBTree, Test3) {
         tree.Insert(i);
     }
 
-    int test_close{16}, closest{};
+    int test_close{16};
 
     EXPECT_RB_TREE_VALID(tree);
 

@@ -42,8 +42,8 @@ int main() {
     }
 
     cache_init_t init = {
-        .hash = index_hash_string,
-        .cmp = index_cmp_string,
+        .hash = CACHE_HASH_F(index_hash_string),
+        .cmp = CACHE_CMP_F(index_cmp_string),
         .get = NULL,
         .size = m,
         .data_size = 0,
@@ -66,7 +66,7 @@ int main() {
         lfu_get(lfu, array[i]);
 
         static char file[128] = {0};
-        snprintf(file, 128, "dump%i.dot", i);
+        snprintf(file, 128, "dump%lu.dot", i);
 
         output.file = fopen(file, "w");
         dump_cache(lfu, output);

@@ -140,7 +140,7 @@ lfuda_t lfuda_init(cache_init_t init) {
 
     base_cache_init(&lfuda->base, init);
 
-    lfuda->rbtree = rb_tree_init(rb_entry_cmp);
+    lfuda->rbtree = rb_tree_init(RBTREE_CMP_F(rb_entry_cmp));
     lfuda->age = 0;
 
     return lfuda;

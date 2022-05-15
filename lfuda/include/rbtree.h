@@ -43,6 +43,8 @@ const void *rb_tree_closest_left(rb_tree_t tree_, void *key);
 // Get element closest to key from the left
 const void *rb_tree_closest_right(rb_tree_t tree_, void *key);
 
+#define RBTREE_CMP_F(func) ((rb_cmp_func_t)(func))
+
 #ifdef __cplusplus
 }
 #endif

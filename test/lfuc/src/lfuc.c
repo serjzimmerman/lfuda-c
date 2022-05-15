@@ -22,6 +22,7 @@ int index_cmp(index_t **a, index_t **b) {
 }
 
 void *get_page(index_t *index) {
+    UNUSED_PARAMETER(index);
     static int a = 5;
     return &a;
 }
@@ -39,9 +40,9 @@ int main() {
     }
 
     cache_init_t init = {
-        .hash = index_hash,
-        .cmp = index_cmp,
-        .get = get_page,
+        .hash = CACHE_HASH_F(index_hash),
+        .cmp = CACHE_CMP_F(index_cmp),
+        .get = CACHE_GET_F(get_page),
         .size = m,
         .data_size = sizeof(index_t),
     };
@@ -49,22 +50,27 @@ int main() {
     lfu_t lfu = lfu_init(init);
 
     index_t *array = calloc_checked(n, sizeof(index_t));
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         index_t *index = &array[i];
-        if (scanf("%d", index) != 1) {
+        if (scanf("%d", &index->value) != 1) {
             ERROR("Invalid input\n");
         }
         lfu_get(lfu, index);
     }
 
+#ifdef DUMP
     output_t output = {0};
     output.file = fopen("dump.dot", "w");
+    if (!output.file) {
+        ERROR("Could not open a file\n");
+    }
     assert(output.file);
     output.print = print_elem;
 
     dump_cache(lfu, output);
     fclose(output.file);
     printf("%lu\n", lfu_get_hits(lfu));
+#endif
 
     lfu_free(lfu);
     free(array);

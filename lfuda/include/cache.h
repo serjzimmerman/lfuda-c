@@ -26,6 +26,7 @@ typedef struct {
 
 #define CACHE_HASH_F(func) ((hash_func_t)(func))
 #define CACHE_CMP_F(func)  ((entry_cmp_func_t)(func))
+#define CACHE_GET_F(func)  ((cache_get_page_t)(func))
 
 #ifdef __cplusplus
 }

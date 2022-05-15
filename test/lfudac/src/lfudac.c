@@ -20,6 +20,7 @@ int index_cmp(index_t **a, index_t **b) {
 }
 
 void *get_page(index_t *index) {
+    UNUSED_PARAMETER(index);
     static int a = 5;
     return &a;
 }
@@ -37,29 +38,34 @@ int main() {
     }
 
     cache_init_t init = {
-        .hash = index_hash,
-        .cmp = index_cmp,
-        .get = get_page,
+        .hash = CACHE_HASH_F(index_hash),
+        .cmp = CACHE_CMP_F(index_cmp),
+        .get = CACHE_GET_F(get_page),
         .size = m,
         .data_size = sizeof(index_t),
     };
 
     lfuda_t lfu = lfuda_init(init);
+#ifdef DUMP
     output_t output = {0};
     output.print = print_data;
+#endif
 
     index_t *array = calloc_checked(n, sizeof(index_t));
     for (size_t i = 0; i < n; ++i) {
         static char buf[128];
-        snprintf(buf, 128, "dump%d.dot", i);
+        snprintf(buf, 128, "dump%lu.dot", i);
         index_t *index = &array[i];
-        if (scanf("%d", index) != 1) {
+        if (scanf("%d", &index->value) != 1) {
             ERROR("Invalid input\n");
         }
         lfuda_get(lfu, index);
 
 #ifdef DUMP
         output.file = fopen(buf, "w");
+        if (!output.file) {
+            ERROR("Could not open a file\n");
+        }
         dump_cache(lfu, output);
         fclose(output.file);
 #endif
