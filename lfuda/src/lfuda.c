@@ -229,7 +229,6 @@ static void *lfuda_get_case_is_not_full_impl(struct lfuda_s *lfuda, void *index)
     local_node_data_t local_data = {0};
     local_data.frequency = 1;
     local_data.index = index;
-    local_data.cached = curr_data_ptr;
 
     freq_node_t first_freq = lfuda_first_freq_node_init(lfuda);
     if (basecache->data_size) {
@@ -273,7 +272,7 @@ static void *lfuda_get_case_full_impl(struct lfuda_s *lfuda, void *index) {
     lfuda->age = freq_node_get_key(evicted_data.root_node);
     curr_data_ptr = local_data.cached = evicted_data.cached;
 
-    entry_t *free_entry = lfuda_remove(basecache, toevict, &local_data.index);
+    entry_t *free_entry = lfuda_remove(basecache, toevict, &evicted_data.index);
     freq_node_t next_freq = lfuda_first_freq_node_init(lfuda);
 
     local_data.root_node = next_freq;
