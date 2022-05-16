@@ -20,8 +20,9 @@ set(LFUDA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 find_package(GTest)
 set(NOGTEST ON CACHE BOOL "Disable GoogleTest")
+
+enable_testing()
 if(NOT NOGTEST AND GTEST_FOUND AND CMAKE_MINOR_VERSION GREATER_EQUAL 20)
-    enable_testing()
 else()
     message(WARNING "Google Test disabled")
 endif()
