@@ -7,8 +7,6 @@
 #include "lfuda.h"
 #include "memutil.h"
 
-#define DUMP
-
 typedef struct {
     int value;
 } index_t;

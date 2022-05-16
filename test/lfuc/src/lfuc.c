@@ -69,9 +69,9 @@ int main() {
 
     dump_cache(lfu, output);
     fclose(output.file);
-    printf("%lu\n", lfu_get_hits(lfu));
 #endif
 
+    printf("%lu\n", lfu_get_hits(lfu));
     lfu_free(lfu);
     free(array);
 }
