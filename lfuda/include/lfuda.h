@@ -26,6 +26,9 @@ void *lfuda_get(lfuda_t cache_, void *index);
 // Get current hits in lfuda
 size_t lfuda_get_hits(lfuda_t cache_);
 
+// Get current age of cache
+size_t lfuda_get_age(lfuda_t cache_);
+
 #ifdef __cplusplus
 }
 #endif
