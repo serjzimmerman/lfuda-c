@@ -178,7 +178,6 @@ freq_node_t lfuda_first_freq_node_init(struct lfuda_s *lfuda) {
     rb_entry_t *next_freq = rb_tree_closest_left(lfuda->rbtree, &first_freq_key);
 
     if (!next_freq) {
-        freq_node_t new_freq_node = freq_node_init(first_freq_key);
         rb_tree_insert(lfuda->rbtree, rb_entry_init(first_freq_key, new_freq_node));
         dl_list_push_front(basecache->freq_list, new_freq_node);
         return new_freq_node;
@@ -186,6 +185,8 @@ freq_node_t lfuda_first_freq_node_init(struct lfuda_s *lfuda) {
 
     freq_node_t next_freq_node = next_freq->freq_node;
     if (next_freq->key == first_freq_key) {
+        local_list_free(freq_node_get_local(new_freq_node));
+        freq_node_free(new_freq_node);
         return next_freq_node;
     }
 
