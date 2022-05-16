@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.11)
 project(lfuda)
 
 option(INSOURCEBUILD OFF)
@@ -19,10 +19,11 @@ set(LFUDA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common)
 set(LFUDA_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 find_package(GTest)
-if(GTEST_FOUND)
+set(NOGTEST ON CACHE BOOL "Disable GoogleTest")
+if(NOT NOGTEST AND GTEST_FOUND AND CMAKE_MINOR_VERSION GREATER_EQUAL 20)
     enable_testing()
 else()
-    message(WARNING "Unable to find Google Test, testing disabled")
+    message(WARNING "Google Test disabled")
 endif()
 
 set(NOLINT ON CACHE BOOL "Disable clang-tidy")
