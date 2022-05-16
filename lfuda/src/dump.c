@@ -11,11 +11,13 @@
 
 #include "basecache.h"
 #include "dllist.h"
+#include "lfuda.h"
 
 #include "memutil.h"
 #include <assert.h>
 #include <stdio.h>
 
+#define LFUDA
 //============================================================================================================
 
 static void dump_freq_links(freq_list_t freqlist, FILE *file) {
@@ -86,12 +88,24 @@ static void dump_freq_node_list(freq_node_t freqnode, output_t format_dump) {
 
 //============================================================================================================
 
+void dump_age_stat(size_t age, FILE *file) {
+    fprintf(file, "\tsubgraph AGE_STAT\n");
+    fprintf(file, "\t{\n");
+    fprintf(file, "\t\tnode [shape = box, style = \"filled\", fillcolor = \"teal\", fontcolor = \"white\"];\n");
+    fprintf(file, "\t\tage [label = \"Cache Age: %lu\"];\n", age);
+    fprintf(file, "\t}\n");
+}
+
+//============================================================================================================
+
 void dump_cache(void *cache_, output_t format_dump) {
     assert(cache_);
     assert(format_dump.file);
 
     FILE *file = format_dump.file;
+
     base_cache_t *cache = (struct base_cache_s *)cache_;
+
     freq_list_t freqlist = cache->freq_list;
     freq_node_t current_freq_node = dl_list_get_first(freqlist);
 
@@ -112,6 +126,12 @@ void dump_cache(void *cache_, output_t format_dump) {
     }
 
     dump_freq_links(freqlist, format_dump.file);
+
+#ifdef LFUDA
+    lfuda_t lfuda = (lfuda_t *)cache_;
+    size_t age = lfuda_get_age(lfuda);
+    dump_age_stat(age, format_dump.file);
+#endif
 
     fprintf(file, "}\n");
 }
